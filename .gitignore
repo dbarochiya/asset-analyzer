@@ -1,0 +1,18 @@
+# Source files not needed for GitHub Pages live site
+# but useful to keep in the repo if you want a full history.
+# If you only want the live site, see the note below.
+
+# Python processing
+parse_data.py
+raw-data.xlsx
+__pycache__/
+
+# Node server (not used by GH Pages)
+server.js
+node_modules/
+
+# OS specific
+.DS_Store
+
+# Temporary files
+/tmp/

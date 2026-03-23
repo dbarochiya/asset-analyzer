@@ -1,0 +1,2744 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Analyzer</title>
+  <meta name="description"
+    content="Investment portfolio analyzer — multi-account, MF-style NAV, XIRR, edit & export." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg2: #0f1428;
+      --bg3: #141932;
+      --border: rgba(255, 255, 255, .07);
+      --glass: rgba(255, 255, 255, .04);
+      --glass-h: rgba(255, 255, 255, .07);
+      --text: #e8eaf6;
+      --muted: #8891b0;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6584;
+      --accent4: #ffa94d;
+      --green: #21d07a;
+      --red: #ff4f5e;
+      --yellow: #ffd166;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh
+    }
+
+    /* NAV */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+      background: rgba(10, 14, 26, .9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      gap: 12px
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      white-space: nowrap
+    }
+
+    .nav-brand svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .nav-meta {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap
+    }
+
+    .btn:hover {
+      background: var(--glass-h);
+      border-color: var(--accent)
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .btn-accent:hover {
+      opacity: .85
+    }
+
+    /* TABS */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 24px
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap
+    }
+
+    .tab-btn {
+      padding: 7px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .tab-btn:hover {
+      background: var(--glass-h);
+      color: var(--text)
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    /* ACCOUNT TOGGLES */
+    .account-toggles {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap
+    }
+
+    .acc-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      opacity: .45
+    }
+
+    .acc-toggle.on {
+      opacity: 1
+    }
+
+    .acc-toggle .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block
+    }
+
+    /* KPI GRID */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px
+    }
+
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      transition: all .3s;
+      position: relative;
+      overflow: visible
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 60%, rgba(108, 99, 255, .05));
+      pointer-events: none;
+      border-radius: var(--radius)
+    }
+
+    .card:hover {
+      background: var(--glass-h);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .3)
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 8px
+    }
+
+    .card-value {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 5px
+    }
+
+    .card-sub {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .positive {
+      color: var(--green)
+    }
+
+    .negative {
+      color: var(--red)
+    }
+
+    .neutral {
+      color: var(--accent)
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .section-title span {
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    /* CHARTS */
+    .chart-grid {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 22px
+    }
+
+    .chart-grid-2 {
+      grid-template-columns: 1fr 1fr
+    }
+
+    .chart-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px
+    }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(108, 99, 255, .2);
+      color: var(--accent)
+    }
+
+    .chart-info-tip {
+      display: inline-block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-left: 6px;
+      cursor: help;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      user-select: none;
+    }
+
+    .chart-info-tip:hover {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    canvas {
+      max-height: 320px
+    }
+
+    /* CORRELATION MATRIX */
+    #correlationSection {
+      margin-bottom: 24px;
+    }
+
+    .corr-wrap {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    /* CONCENTRATION DONUT */
+    .conc-layout {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .conc-chart-wrap {
+      flex: 0 0 220px;
+      height: 220px;
+      position: relative;
+    }
+
+    .conc-legend {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .conc-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      font-size: 12px;
+    }
+
+    .conc-legend-item:last-child {
+      border-bottom: none;
+    }
+
+    .conc-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .conc-name {
+      flex: 1;
+      color: var(--fg);
+    }
+
+    .conc-pct {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .conc-val {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* SHARPE BADGE */
+    .sharpe-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .sharpe-exc {
+      background: rgba(0, 212, 170, .2);
+      color: #00d4aa;
+    }
+
+    .sharpe-good {
+      background: rgba(108, 99, 255, .2);
+      color: var(--accent);
+    }
+
+    .sharpe-ok {
+      background: rgba(255, 180, 0, .2);
+      color: #ffa94d;
+    }
+
+    .sharpe-bad {
+      background: rgba(255, 79, 94, .2);
+      color: #ff4f5e;
+    }
+
+    /* TRANCHE TABLE */
+    .tranche-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .tranche-table th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--glass);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .tranche-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+    }
+
+    .tranche-table tr:hover td {
+      background: rgba(255, 255, 255, .03);
+    }
+
+    /* TABLE TOGGLE */
+    .table-toggle-wrap {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .table-toggle-btn {
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .table-toggle-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .corr-wrap {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .corr-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .corr-header h4 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .corr-matrix {
+      display: grid;
+      gap: 3px;
+      width: max-content;
+    }
+
+    .corr-cell {
+      width: 90px;
+      height: 72px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      line-height: 1.3;
+      cursor: default;
+      position: relative;
+      transition: transform 0.15s;
+    }
+
+    .corr-cell:hover {
+      transform: scale(1.06);
+      z-index: 2;
+    }
+
+    .corr-cell-val {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .corr-cell-label {
+      font-size: 9px;
+      opacity: 0.75;
+      text-align: center;
+      padding: 0 4px;
+    }
+
+    .corr-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .corr-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .corr-legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    .corr-verdict {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* COMPARE */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px
+    }
+
+    .compare-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px
+    }
+
+    .compare-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px
+    }
+
+    .stat-row:last-child {
+      border-bottom: none
+    }
+
+    .stat-label {
+      color: var(--muted)
+    }
+
+    .stat-val {
+      font-weight: 600
+    }
+
+    .progress-track {
+      height: 5px;
+      background: rgba(255, 255, 255, .08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s ease
+    }
+
+    /* TABLE */
+    .table-wrap {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 22px;
+      overflow: visible;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px
+    }
+
+    th {
+      background: rgba(0, 0, 0, .2);
+      padding: 9px 12px;
+      text-align: right;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      white-space: nowrap
+    }
+
+    th:first-child {
+      text-align: left
+    }
+
+    td {
+      padding: 4px 8px;
+      text-align: right;
+      border-top: 1px solid var(--border);
+      white-space: nowrap;
+      height: 32px;
+      vertical-align: middle;
+    }
+
+    td:first-child {
+      text-align: left;
+      font-weight: 500
+    }
+
+    tr:hover td {
+      background: var(--glass-h)
+    }
+
+    .ret-pos {
+      color: var(--green);
+      font-weight: 600
+    }
+
+    .ret-neg {
+      color: var(--red);
+      font-weight: 600
+    }
+
+    /* EDIT INPUTS */
+    .edit-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 4px 6px;
+      text-align: right;
+      width: 80px;
+      transition: all .2s
+    }
+
+    .edit-input.date-input {
+      text-align: left;
+      width: 90px
+    }
+
+    .edit-input:hover {
+      background: rgba(255, 255, 255, .05);
+      border-color: rgba(255, 255, 255, .2)
+    }
+
+    .edit-input:focus {
+      outline: none;
+      background: rgba(108, 99, 255, .08);
+      border-color: var(--accent)
+    }
+
+    .delete-row-btn {
+      background: none;
+      border: none;
+      color: var(--red);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0.5;
+      transition: opacity .2s
+    }
+
+    .delete-row-btn:hover {
+      background: rgba(255, 79, 94, .15);
+      opacity: 1
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, .15);
+      align-items: center
+    }
+
+    .save-status {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    /* INSIGHTS */
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 10px;
+      margin-bottom: 22px
+    }
+
+    .insight-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      transition: all .2s
+    }
+
+    .insight-card:hover {
+      background: var(--glass-h);
+      border-color: rgba(108, 99, 255, .3)
+    }
+
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 22px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border)
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:900px) {
+
+      .chart-grid-2,
+      .compare-grid {
+        grid-template-columns: 1fr
+      }
+
+      .container {
+        padding: 18px 14px
+      }
+
+      .nav {
+        padding: 0 14px
+      }
+    }
+
+    @media(max-width:600px) {
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .card-value {
+        font-size: 18px
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 20L10 13L14 17L20 10L24 14" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <circle cx="24" cy="14" r="3" fill="url(#g1)" />
+        <defs>
+          <linearGradient id="g1" x1="4" y1="20" x2="24" y2="10" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6c63ff" />
+            <stop offset="1" stop-color="#00d4aa" />
+          </linearGradient>
+        </defs>
+      </svg>
+      Portfolio Analyzer
+    </div>
+    <div class="nav-right" style="gap: 12px;">
+      <div class="nav-meta" id="generatedAt">—</div>
+      <button class="btn" style="border-color:var(--border);" onclick="resetApp()">🔄 New Import</button>
+      <button class="btn" style="border-color:var(--border);" onclick="downloadJSON()">⬇ Save State (JSON)</button>
+      <button class="btn btn-accent" onclick="exportExcel()">⬇ Export Excel</button>
+    </div>
+  </nav>
+
+  <!-- IMPORT OVERLAY -->
+  <div id="importOverlay"
+    style="position:fixed; inset:0; background:var(--bg); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 20px;">
+    <div
+      style="text-align:center; max-width:500px; padding: 45px; background: rgba(15,20,40,0.8); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.6);">
+      <h1
+        style="background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; font-size: 28px;">
+        Portfolio Analyzer</h1>
+      <p style="color:var(--muted); margin-bottom: 30px; font-size: 13px; line-height: 1.6;">100% Stateless &
+        Client-Side. Your financial data never leaves your browser.<br>Stop tracking manually. Start analysing
+        instantly.</p>
+
+      <div
+        style="background:var(--bg); border: 2px dashed rgba(255,255,255,0.1); border-radius:12px; padding:35px 20px; margin-bottom: 24px; transition: all 0.2s;"
+        id="dropzone">
+        <h3 style="margin-bottom: 8px; font-weight: 600; font-size: 16px;">Import Portfolio File</h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom: 15px; line-height: 1.5;">Drop a
+          <b>raw-data.xlsx</b>, an exported <b>Excel</b> file, or a <b>data.json</b> backup here.
+        </p>
+        <div
+          style="font-size:11px; color:var(--muted); margin-bottom: 24px; text-align: left; background: rgba(0,0,0,0.2); padding: 12px 14px; border-radius: 8px;">
+          <b style="color:var(--text); margin-bottom:4px; display:inline-block;">Excel Format Rules:</b><br>
+          • Each Sheet name becomes an Account name (e.g., 'Zerodha', 'Real Estate').<br>
+          • Required column headers: <code
+            style="color:var(--accent2); background:rgba(0,0,0,0.3); padding:2px 4px; border-radius:4px;">Date</code>
+          <code
+            style="color:var(--accent2); background:rgba(0,0,0,0.3); padding:2px 4px; border-radius:4px;">Cashflow</code>
+          <code
+            style="color:var(--accent2); background:rgba(0,0,0,0.3); padding:2px 4px; border-radius:4px;">Free Cash</code>
+          <code
+            style="color:var(--accent2); background:rgba(0,0,0,0.3); padding:2px 4px; border-radius:4px;">Invested</code>
+          <code style="color:var(--accent2); background:rgba(0,0,0,0.3); padding:2px 4px; border-radius:4px;">PV</code>
+        </div>
+        <input type="file" id="fileUpload" accept=".xlsx, .xls, .json"
+          style="max-width:220px; display:inline-block; font-size: 12px; color: var(--muted); cursor: pointer;">
+      </div>
+
+      <div id="importError"
+        style="color:#ff6b6b; margin-top:-10px; margin-bottom:15px; font-size:12px; font-weight:500; display:none; background:rgba(255,107,107,0.1); padding:10px; border-radius:4px; border:1px solid rgba(255,107,107,0.2)">
+      </div>
+
+      <p style="color:rgba(255,255,255,0.2); font-size:12px; margin-bottom: 16px; font-weight: 700;">OR</p>
+      <div style="display:flex; gap:12px; width:100%;">
+        <button class="btn" onclick="downloadSampleExcel()"
+          style="flex:1; justify-content: center; padding: 12px; font-size: 13px; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); transition: 0.2s;">Download
+          Sample</button>
+        <button class="btn" onclick="startBlank()"
+          style="flex:1; justify-content: center; padding: 12px; font-size: 13px; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); transition: 0.2s;">Start
+          Blank UI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- TABS -->
+    <div class="tabs" id="tabBar">
+      <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+      <!-- account tabs injected by JS -->
+      <button class="tab-btn" data-tab="insights" onclick="switchTab('insights')">💡 Insights</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="content-overview">
+      <div class="account-toggles" id="accToggles"></div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- PORTFOLIO CONCENTRATION DONUT - only shown for 2+ accounts -->
+      <div id="concentrationSection" style="display:none;margin-bottom:18px;">
+        <div class="chart-card">
+          <div class="chart-title">Portfolio Concentration
+            <div class="badge">allocation by current value</div>
+            <span class="chart-info-tip"
+              title="Shows what % of your total portfolio value is held in each account. Highly concentrated = single-account risk. Aim for balance unless one account performance dominates.">&#9432;</span>
+          </div>
+          <div class="conc-layout">
+            <div class="conc-chart-wrap"><canvas id="chartConcentration"></canvas></div>
+            <div class="conc-legend" id="concLegend"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-title">Portfolio Value Over Time <span></span></div>
+      <div class="chart-card" style="margin-bottom:18px">
+        <div class="chart-title">Combined &amp; Per-Account Value <div class="badge">Total PV</div>
+          <span class="chart-info-tip"
+            title="Shows how the total portfolio value (current investments + free cash) has changed over time for each account. Use this to see growth trajectory and compare account sizes. A rising line = wealth being built.">&#9432;</span>
+        </div>
+        <canvas id="chartPV"></canvas>
+      </div>
+      <!-- Full Width NAV Progression -->
+      <div class="chart-card" style="margin-bottom:18px">
+        <div class="chart-title">NAV Progression <div class="badge">MF-style, base 100 &middot; vs Market Indices</div>
+          <span class="chart-info-tip"
+            title="Mutual-fund style NAV starting at 100. Normalises for cashflow timing — if you added/withdrew money, NAV still reflects pure performance. Compare against Nifty/Nasdaq/Gold to judge if your portfolio beat alternatives. NAV above benchmarks = you're outperforming.">&#9432;</span>
+        </div>
+        <canvas id="chartNAV" style="min-height:300px"></canvas>
+      </div>
+
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-title">XIRR Progression <div class="badge">annualised %</div>
+            <span class="chart-info-tip"
+              title="Running XIRR — the annualised money-weighted return as of each month, considering all your actual cashflows. Higher = better. Watch for the trend: a rising XIRR means recent performance is improving the overall rate. Compare to FD rate (7%) to know if you're beating risk-free returns.">&#9432;</span>
+          </div>
+          <canvas id="chartXIRR"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Monthly Returns % <div class="badge">period-over-period</div>
+            <span class="chart-info-tip"
+              title="How much your portfolio actually gained or lost each month (period-over-period, not cumulative). Green = gain that month, red = loss that month. Use this to find significant months where your actions (investments, withdrawals) or market events had a visible impact. Tall bars = high-impact months.">&#9432;</span>
+          </div>
+          <canvas id="chartReturns" style="min-height:280px"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-grid chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-title">Invested vs Portfolio Value <div class="badge">capital deployed</div>
+            <span class="chart-info-tip"
+              title="Solid line = actual current portfolio value. Dashed line = net money you've put in. The gap between them is your gain (or loss). When value line is above invested line, you're in profit. Use this to see how quickly your portfolio grew relative to your contributions.">&#9432;</span>
+          </div>
+          <canvas id="chartCashflow"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Gain Composition <div class="badge">Unrealised + Realised stacked</div>
+            <span class="chart-info-tip"
+              title="Each bar shows total gain broken into: Unrealised (still in the investment, could go up or down) and Realised (already pocketed from redemptions/dividends). Use this to understand how much of your profit is locked vs liquid. Negative bars = booked losses or early-stage investing.">&#9432;</span>
+          </div>
+          <canvas id="chartGains" style="min-height:220px"></canvas>
+        </div>
+      </div>
+      <div class="section-title">Account Summary <span></span></div>
+      <div class="compare-grid" id="compareGrid"></div>
+
+      <!-- CORRELATION MATRIX (only visible for 2+ accounts) -->
+      <div id="correlationSection" style="display:none">
+        <div class="section-title">Account Correlation Matrix
+          <span class="chart-info-tip"
+            style="font-size:13px; color:var(--muted); margin-left:6px; cursor:help; opacity:0.7;"
+            title="Pearson correlation of monthly returns between each pair of accounts. +1.0 = perfect lockstep, 0 = uncorrelated, -1.0 = opposite. High correlation = false diversification (both fall together in a downturn). Target: pairs below 0.5 for genuine diversification.">&#9432;</span>
+        </div>
+        <div class="corr-wrap" id="corrWrap"></div>
+      </div>
+
+      <!-- COMBINED TRANCHE IRR -->
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          IRR per Investment Tranche (Combined)
+          <span class="chart-info-tip" title="For every month across all active accounts where new money was added, this shows the annualised return on that combined cashflow tranche — computed using the combined portfolio NAV. Negative = that tranche is underwater. Lets you see which months you deployed capital effectively across your whole portfolio.">&#9432;</span>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-bottom:18px; padding:0; overflow:hidden;">
+        <div class="table-scroll"><table class="tranche-table" id="tblTrancheOverview"></table></div>
+      </div>
+
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <div>Global Market Benchmarking <span></span></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="tblBenchmarks"></table>
+        </div>
+      </div>
+
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <div>Combined Monthly Data <span></span></div>
+        <div class="table-toggle-wrap">
+          <button class="table-toggle-btn active" id="btnMonthly" onclick="setTableView('monthly')">Monthly</button>
+          <button class="table-toggle-btn" id="btnAnnual" onclick="setTableView('annual')">Annual</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="tblCombined"></table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- INSIGHTS -->
+    <div id="content-insights" style="display:none">
+      <div class="section-title">Auto-Generated Insights <span></span></div>
+      <div class="insights-grid" id="insightsGrid"></div>
+    </div>
+
+  </div>
+  <div class="footer">Portfolio Analyzer · data sourced from data.json</div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    //  CONSTANTS & PALETTE
+    // ═══════════════════════════════════════════════════════════════
+    const PALETTE = ['#6c63ff', '#00d4aa', '#ffa94d', '#ff6584'];
+    const pa = (i, a) => { const h = PALETTE[i % PALETTE.length], r = parseInt(h.slice(1, 3), 16), g = parseInt(h.slice(3, 5), 16), b = parseInt(h.slice(5, 7), 16); return `rgba(${r},${g},${b},${a})`; };
+    const gridColor = 'rgba(255,255,255,0.05)';
+    Chart.defaults.color = '#8891b0'; Chart.defaults.font.family = "'Inter',sans-serif"; Chart.defaults.font.size = 11;
+    const baseScales = { x: { grid: { color: gridColor }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: gridColor } } };
+
+    const fmt = v => v == null ? '—' : '₹' + Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    const fmtRaw = v => v == null ? '' : Number(v);
+    const fmtp = v => v == null ? '—' : (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%';
+    const fmtNav = v => v == null ? '—' : Number(v).toFixed(2);
+    const cls = v => v >= 0 ? 'positive' : 'negative';
+
+    // JS FLOATING TOOLTIP
+    const TIPS = {
+      cashflow: "Money deposited into (positive) or withdrawn from (negative) the account this period.",
+      free_cash: "Uninvested cash sitting idle in the account — not yet deployed into securities.",
+      invested: "Snapshot: current market value of invested positions, excluding free cash.",
+      pv: "Portfolio Value = Invested + Free Cash at this snapshot date.",
+      total_invested: "Cumulative sum of all cashflows into the account up to this date.",
+      total_pv: "Total Portfolio Value = PV + Free Cash (running).",
+      gain_unrealised: "PV − Invested. Paper profit on open positions that haven't been sold.",
+      gain_realised: "Invested + Free Cash − Total Invested. Profit captured from closed/sold positions.",
+      gain_total: "Unrealised Gain + Realised Gain. Overall absolute profit/loss.",
+      returns_pct: "Gain Total / Total Invested × 100. Simple percentage return on deployed capital.",
+      xirr: "XIRR — Annualised Internal Rate of Return accounting for actual timing of cashflows.",
+      monthly_xirr: "XIRR computed assuming you liquidate at today's portfolio value. Shows running annualised return.",
+      nav: "MF-style NAV: starts at 100. Cashflows buy new units at the current NAV so only portfolio performance (not cash injections) moves the NAV — identical to how mutual funds report.",
+    };
+    const tooltipEl = document.createElement('div');
+    tooltipEl.style.cssText = 'position:fixed; background:#1c2240; border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:11px; color:#fff; pointer-events:none; z-index:99999; display:none; max-width:250px; box-shadow:0 8px 24px rgba(0,0,0,0.6);';
+    document.body.appendChild(tooltipEl);
+    document.addEventListener('mouseover', e => { const t = e.target.closest('[data-tip]'); if (t) { tooltipEl.innerHTML = TIPS[t.dataset.tip] || t.dataset.tip; tooltipEl.style.display = 'block'; } });
+    document.addEventListener('mousemove', e => { if (tooltipEl.style.display === 'block') { tooltipEl.style.left = (e.clientX + 15) + 'px'; tooltipEl.style.top = (e.clientY + 15) + 'px'; } });
+    document.addEventListener('mouseout', e => { if (e.target.closest('[data-tip]')) tooltipEl.style.display = 'none'; });
+
+    function tip(key, label) {
+      return `<span data-tip="${key}" style="cursor:help; border-bottom:1px dotted var(--muted); padding-bottom:1px;">${label} <span style="font-size:10px; opacity:0.7">ⓘ</span></span>`;
+    }
+
+    const fmtInput = v => Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    const parseNum = v => parseFloat(String(v).replace(/,/g, '')) || 0;
+
+    document.addEventListener('focusout', e => {
+      if (e.target.classList.contains('num-input') && e.target.value !== '') e.target.value = fmtInput(parseNum(e.target.value));
+    });
+    document.addEventListener('focusin', e => {
+      if (e.target.classList.contains('num-input') && e.target.value !== '') { const p = parseNum(e.target.value); e.target.value = p === 0 ? '' : p; }
+    });
+    function kpiCard(key, label, value, sub = '', valClass = 'neutral') {
+      return `<div class="card"><div class="card-label">${tip(key, label)}</div><div class="card-value ${valClass}">${value}</div><div class="card-sub">${sub}</div></div>`;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CLIENT-SIDE FORMULA ENGINE
+    // ═══════════════════════════════════════════════════════════════
+    function calcXIRR(rows) {
+      if (rows.length < 2) return null;
+      const dates = rows.map(r => new Date(r.date).getTime());
+      let cashflows = rows.map(r => -(r.cashflow || 0));
+      cashflows[cashflows.length - 1] += (rows[rows.length - 1].total_pv || 0);
+      const xnpv = rate => cashflows.reduce((sum, cf, i) => sum + cf / Math.pow(1 + rate, (dates[i] - dates[0]) / 86400000 / 365), 0);
+      const dxnpv = rate => cashflows.reduce((sum, cf, i) => { const tf = (dates[i] - dates[0]) / 86400000 / 365; return sum - tf * cf / Math.pow(1 + rate, tf + 1); }, 0);
+      let rate = 0.1;
+      for (let i = 0; i < 100; i++) {
+        const val = xnpv(rate), dval = dxnpv(rate);
+        if (dval === 0 || isNaN(val)) return null;
+        const newRate = rate - val / dval;
+        if (Math.abs(newRate - rate) < 1e-6) return newRate;
+        rate = newRate;
+      }
+      return null;
+    }
+
+    function recalcRows(rawRows) {
+      let cumInvested = 0, units = null, navPrev = 100, pvPrev = null;
+      const derived = rawRows.map((r) => {
+        const cf = +r.cashflow || 0, fc = +r.free_cash || 0, inv = +r.invested || 0, pv = +r.pv || 0;
+        cumInvested += cf;
+        const totalPV = pv + fc;
+        const gainUnreal = pv - inv;
+        const gainReal = inv + fc - cumInvested;
+        const gainTotal = gainUnreal + gainReal;
+        const returnsPct = cumInvested ? gainTotal / cumInvested * 100 : 0;
+        let nav;
+        if (units === null) { units = totalPV / 100; nav = 100; }
+        else { units += (navPrev > 0 ? cf / navPrev : 0); nav = units > 0 ? totalPV / units : 100; }
+        // Period-over-period monthly return (what actually happened THIS month)
+        const monthlyReturnPct = pvPrev !== null && pvPrev > 0 ? (totalPV - pvPrev) / pvPrev * 100 : 0;
+        // NAV-based monthly change (pure time-weighted, strips cashflow distortion)
+        const navMonthlyChangePct = navPrev > 0 ? (nav - navPrev) / navPrev * 100 : 0;
+        navPrev = nav;
+        pvPrev = totalPV;
+        return {
+          date: r.date, epoch_ms: r.epoch_ms,
+          cashflow: Math.round(cf * 100) / 100, free_cash: Math.round(fc * 100) / 100, invested: Math.round(inv * 100) / 100, pv: Math.round(pv * 100) / 100,
+          total_invested: Math.round(cumInvested * 100) / 100, total_pv: Math.round(totalPV * 100) / 100,
+          gain_unrealised: Math.round(gainUnreal * 100) / 100, gain_realised: Math.round(gainReal * 100) / 100,
+          gain_total: Math.round(gainTotal * 100) / 100,
+          returns_pct: Math.round(returnsPct * 10000) / 10000,
+          monthly_return_pct: Math.round(monthlyReturnPct * 10000) / 10000,
+          nav_monthly_change_pct: Math.round(navMonthlyChangePct * 10000) / 10000,
+          nav: Math.round(nav * 10000) / 10000,
+          monthly_xirr_pct: null // computed below
+        };
+      });
+      derived.forEach((r, idx) => {
+        if (idx > 0) { const rate = calcXIRR(derived.slice(0, idx + 1)); r.monthly_xirr_pct = rate !== null ? rate * 100 : null; }
+      });
+      return derived;
+    }
+
+    function computeAnalytics(name, rows) {
+      if (!rows || !rows.length) return {};
+      const pvs = rows.map(r => r.total_pv || 0);
+
+      // Use PERIODIC monthly returns (period-over-period) — mathematically correct
+      // Skip first row (it's the baseline, no previous period to compare against)
+      const periodicReturns = rows.slice(1).map(r => r.monthly_return_pct || 0);
+      const navChanges = rows.slice(1).map(r => r.nav_monthly_change_pct || 0); // NAV-based
+
+      // Best/Worst month by actual single-month performance
+      let bestIdx = 0, worstIdx = 0;
+      periodicReturns.forEach((r, i) => { if (r > periodicReturns[bestIdx]) bestIdx = i; if (r < periodicReturns[worstIdx]) worstIdx = i; });
+      const bestRow = rows[bestIdx + 1]; // +1 because periodicReturns is sliced from index 1
+      const worstRow = rows[worstIdx + 1];
+
+      // Max Drawdown on total_pv series
+      let peak = pvs[0] || 0, maxDd = 0;
+      pvs.forEach(tv => { if (tv > peak) peak = tv; const dd = peak ? (peak - tv) / peak * 100 : 0; if (dd > maxDd) maxDd = dd; });
+
+      // Max consecutive negative months using periodic returns
+      let maxNeg = 0, cur = 0;
+      periodicReturns.forEach(r => { cur = r < 0 ? cur + 1 : 0; if (cur > maxNeg) maxNeg = cur; });
+
+      // Avg monthly return = mean of periodic returns
+      const avgRet = periodicReturns.length ? periodicReturns.reduce((a, b) => a + b, 0) / periodicReturns.length : 0;
+
+      // Portfolio volatility = std dev of periodic PV returns (annualised × √12)
+      const variance = periodicReturns.length ? periodicReturns.reduce((a, b) => a + Math.pow(b - avgRet, 2), 0) / periodicReturns.length : 0;
+      const volMonthly = Math.sqrt(variance);
+      const volAnnualised = volMonthly * Math.sqrt(12); // annualised
+
+      // NAV-based volatility (pure time-weighted, strips cashflow distortion)
+      const avgNavChange = navChanges.length ? navChanges.reduce((a, b) => a + b, 0) / navChanges.length : 0;
+      const navVariance = navChanges.length ? navChanges.reduce((a, b) => a + Math.pow(b - avgNavChange, 2), 0) / navChanges.length : 0;
+      const navVolAnnualised = Math.sqrt(navVariance) * Math.sqrt(12);
+
+      const last = rows[rows.length - 1];
+
+      let xirr_pct = null;
+      if (rows.length > 1) {
+        const cf = rows.map(r => -(r.cashflow || 0)); cf[cf.length - 1] += (last.total_pv || 0);
+        const ts = rows.map(r => new Date(r.date).getTime());
+        const xnpv = rate => cf.reduce((sum, c, i) => sum + c / Math.pow(1 + rate, (ts[i] - ts[0]) / 86400000 / 365), 0);
+        const dxnpv = rate => cf.reduce((sum, c, i) => { const tf = (ts[i] - ts[0]) / 86400000 / 365; return sum - tf * c / Math.pow(1 + rate, tf + 1); }, 0);
+        let rate = 0.1;
+        for (let i = 0; i < 100; i++) {
+          const val = xnpv(rate), dval = dxnpv(rate);
+          if (dval === 0 || isNaN(val)) break;
+          const newRate = rate - val / dval;
+          if (Math.abs(newRate - rate) < 1e-6) { xirr_pct = newRate * 100; break; }
+          rate = newRate;
+        }
+      }
+
+      // Sharpe Ratio = (XIRR - risk_free_rate) / NAV_annualised_volatility
+      // Using 7% as risk-free rate (same as FD benchmark). Uses NAV volatility (time-weighted, strips cashflow distortion)
+      let sharpe_ratio = null;
+      if (Number.isFinite(xirr_pct) && Number.isFinite(navVolAnnualised) && navVolAnnualised > 0) {
+        sharpe_ratio = Math.round((xirr_pct - 7) / navVolAnnualised * 100) / 100;
+      }
+
+      return {
+        name, xirr_pct,
+        start_date: rows[0].date, end_date: last.date, num_months: rows.length,
+        final_total_invested: last.total_invested, final_pv: last.pv, final_total_pv: last.total_pv,
+        final_gain_total: last.gain_total, final_gain_unrealised: last.gain_unrealised, final_gain_realised: last.gain_realised,
+        final_returns_pct: last.returns_pct, final_nav: last.nav,
+        best_month: { date: bestRow ? bestRow.date : rows[0].date, monthly_return_pct: periodicReturns[bestIdx] || 0, gain_total: bestRow ? bestRow.gain_total : 0 },
+        worst_month: { date: worstRow ? worstRow.date : rows[0].date, monthly_return_pct: periodicReturns[worstIdx] || 0, gain_total: worstRow ? worstRow.gain_total : 0 },
+        max_drawdown_pct: Math.round(maxDd * 100) / 100,
+        max_consecutive_negative_months: maxNeg,
+        avg_monthly_return_pct: Math.round(avgRet * 100) / 100,
+        volatility_pct: Math.round(volAnnualised * 100) / 100,
+        nav_volatility_pct: Math.round(navVolAnnualised * 100) / 100,
+        sharpe_ratio
+      };
+    }
+
+    function generateInsightsText() {
+      const ins = [];
+      DATA.accounts.forEach(acc => {
+        const a = acc.analytics;
+        const start = new Date(a.start_date), end = new Date(a.end_date);
+        const years = (end - start) / (365.25 * 24 * 3600 * 1000);
+        const cagr = years > 0 ? (Math.pow(a.final_nav / 100, 1 / years) - 1) * 100 : 0;
+
+        ins.push(`📈 Best month for ${a.name}: ${a.best_month.date.slice(0, 7)} (${fmtp(a.best_month.monthly_return_pct)} that month)`);
+        ins.push(`📉 Worst month for ${a.name}: ${a.worst_month.date.slice(0, 7)} (${fmtp(a.worst_month.monthly_return_pct)} that month)`);
+        ins.push(`📊 ${a.name} XIRR: ${fmtp(a.xirr_pct)} | Annualized NAV (CAGR): ${fmtp(cagr)}`);
+        ins.push(`🎯 ${a.name} max drawdown: -${a.max_drawdown_pct.toFixed(2)}% | NAV Vol (ann.): ${a.nav_volatility_pct.toFixed(2)}%`);
+      });
+
+      const bestXirr = DATA.accounts.reduce((max, a) => (a.analytics.xirr_pct || -999) > (max.analytics.xirr_pct || -999) ? a : max, DATA.accounts[0]);
+      if (bestXirr) ins.push(`🏆 ${bestXirr.name} has the highest XIRR at ${fmtp(bestXirr.analytics.xirr_pct)}`);
+
+      const comb = DATA.combined;
+      if (comb) {
+        const start = new Date(comb.rows[0].date), end = new Date(comb.rows[comb.rows.length - 1].date);
+        const years = (end - start) / (365.25 * 24 * 3600 * 1000);
+        const cagr = years > 0 ? (Math.pow(comb.final_nav / 100, 1 / years) - 1) * 100 : 0;
+        ins.push(`💼 Combined Portfolio: Invested ${fmt(comb.final_total_invested)} → Value ${fmt(comb.final_total_pv)}`);
+        ins.push(`📈 Portfolio Return: ${fmtp(comb.final_returns_pct)} | CAGR: ${fmtp(cagr)}`);
+      }
+      DATA.insights = ins;
+    }
+
+    const BENCHMARK_RAW = {
+      "Nifty 50": { "2018-01": 11027.70, "2018-02": 10492.85, "2018-03": 10113.70, "2018-04": 10739.35, "2018-05": 10736.15, "2018-06": 10714.30, "2018-07": 11356.50, "2018-08": 11671.95, "2018-09": 10930.45, "2018-10": 10386.60, "2018-11": 10876.75, "2018-12": 10862.55, "2019-01": 10830.95, "2019-02": 10792.50, "2019-03": 11623.90, "2019-04": 11748.15, "2019-05": 11922.80, "2019-06": 11788.85, "2019-07": 11118.00, "2019-08": 11023.25, "2019-09": 11284.20, "2019-10": 11877.45, "2019-11": 12056.05, "2019-12": 12168.45, "2020-01": 11962.10, "2020-02": 11201.75, "2020-03": 8597.75, "2020-04": 9859.90, "2020-05": 9580.30, "2020-06": 10302.10, "2020-07": 11073.45, "2020-08": 11387.50, "2020-09": 11247.55, "2020-10": 11642.40, "2020-11": 12968.95, "2020-12": 13981.75, "2021-01": 13634.60, "2021-02": 14529.15, "2021-03": 14690.70, "2021-04": 14631.10, "2021-05": 15582.80, "2021-06": 15721.50, "2021-07": 15763.05, "2021-08": 17132.20, "2021-09": 17618.15, "2021-10": 17671.65, "2021-11": 16983.20, "2021-12": 17354.05, "2022-01": 17339.85, "2022-02": 16793.90, "2022-03": 17464.75, "2022-04": 17102.55, "2022-05": 16584.55, "2022-06": 15780.25, "2022-07": 17158.25, "2022-08": 17759.30, "2022-09": 17094.35, "2022-10": 18012.20, "2022-11": 18758.30, "2022-12": 18105.30, "2023-01": 17662.15, "2023-02": 17303.95, "2023-03": 17359.75, "2023-04": 18065.00, "2023-05": 18534.10, "2023-06": 19189.05, "2023-07": 19753.80, "2023-08": 19253.80, "2023-09": 19638.30, "2023-10": 19079.60, "2023-11": 20133.15, "2023-12": 21731.40, "2024-01": 21725.70, "2024-02": 21982.80, "2024-03": 22326.90, "2024-04": 22604.85, "2024-05": 22530.70, "2024-06": 24010.60, "2024-07": 24951.15, "2024-08": 25235.90, "2024-09": 25810.85, "2024-10": 24205.35, "2024-11": 24131.10, "2024-12": 23644.80, "2025-01": 23163.65, "2025-02": 22124.70 },
+      "Nasdaq": { "2018-01": 7411.48, "2018-02": 7273.01, "2018-03": 7063.45, "2018-04": 7066.27, "2018-05": 7442.12, "2018-06": 7510.30, "2018-07": 7671.79, "2018-08": 8109.54, "2018-09": 8046.35, "2018-10": 7305.90, "2018-11": 7330.54, "2018-12": 6635.28, "2019-01": 7281.72, "2019-02": 7532.53, "2019-03": 7729.32, "2019-04": 8095.39, "2019-05": 7453.15, "2019-06": 8006.24, "2019-07": 8175.42, "2019-08": 7962.88, "2019-09": 7999.34, "2019-10": 8292.36, "2019-11": 8665.47, "2019-12": 8972.60, "2020-01": 9150.94, "2020-02": 8567.37, "2020-03": 7700.10, "2020-04": 8914.71, "2020-05": 9489.87, "2020-06": 10058.76, "2020-07": 10745.27, "2020-08": 11775.46, "2020-09": 11167.51, "2020-10": 10911.59, "2020-11": 12198.74, "2020-12": 12888.28, "2021-01": 13070.69, "2021-02": 13192.35, "2021-03": 13246.87, "2021-04": 13962.68, "2021-05": 13748.74, "2021-06": 14503.95, "2021-07": 14672.68, "2021-08": 15259.24, "2021-09": 14448.58, "2021-10": 15498.39, "2021-11": 15537.69, "2021-12": 15644.97, "2022-01": 14239.88, "2022-02": 13751.40, "2022-03": 14220.52, "2022-04": 12334.64, "2022-05": 12081.39, "2022-06": 11028.74, "2022-07": 12390.69, "2022-08": 11816.20, "2022-09": 10575.62, "2022-10": 10988.15, "2022-11": 11468.00, "2022-12": 10466.48, "2023-01": 11584.55, "2023-02": 11455.54, "2023-03": 12221.91, "2023-04": 12226.58, "2023-05": 12935.29, "2023-06": 13787.92, "2023-07": 14346.59, "2023-08": 14034.97, "2023-09": 13219.32, "2023-10": 12851.24, "2023-11": 14226.22, "2023-12": 15011.35, "2024-01": 15164.01, "2024-02": 16091.92, "2024-03": 16379.46, "2024-04": 15605.48, "2024-05": 16735.02, "2024-06": 17732.60, "2024-07": 17619.35, "2024-08": 17713.62, "2024-09": 18189.17, "2024-10": 18607.69, "2024-11": 19218.41, "2024-12": 19310.79, "2025-01": 19627.44, "2025-02": 18847.28 },
+      "Gold": { "2018-01": 1339.0, "2018-02": 1315.30, "2018-03": 1324.20, "2018-04": 1312.20, "2018-05": 1299.80, "2018-06": 1251.50, "2018-07": 1230.90, "2018-08": 1198.50, "2018-09": 1195.10, "2018-10": 1214.20, "2018-11": 1224.20, "2018-12": 1281.40, "2019-01": 1325.30, "2019-02": 1313.20, "2019-03": 1292.00, "2019-04": 1284.20, "2019-05": 1305.80, "2019-06": 1413.70, "2019-07": 1414.70, "2019-08": 1541.30, "2019-09": 1475.40, "2019-10": 1510.60, "2019-11": 1460.10, "2019-12": 1519.50, "2020-01": 1583.50, "2020-02": 1581.00, "2020-03": 1591.40, "2020-04": 1690.60, "2020-05": 1740.00, "2020-06": 1793.00, "2020-07": 1974.70, "2020-08": 1957.30, "2020-09": 1887.30, "2020-10": 1877.90, "2020-11": 1774.20, "2020-12": 1893.10, "2021-01": 1850.30, "2021-02": 1728.80, "2021-03": 1707.70, "2021-04": 1767.40, "2021-05": 1905.30, "2021-06": 1771.70, "2021-07": 1817.20, "2021-08": 1816.00, "2021-09": 1757.00, "2021-10": 1783.90, "2021-11": 1773.60, "2021-12": 1828.60, "2022-01": 1795.00, "2022-02": 1900.70, "2022-03": 1949.20, "2022-04": 1911.70, "2022-05": 1848.40, "2022-06": 1804.10, "2022-07": 1762.90, "2022-08": 1710.60, "2022-09": 1662.40, "2022-10": 1640.70, "2022-11": 1755.90, "2022-12": 1825.20, "2023-01": 1928.30, "2023-02": 1828.90, "2023-03": 1969.00, "2023-04": 1990.10, "2023-05": 1963.90, "2023-06": 1921.10, "2023-07": 1970.50, "2023-08": 1938.20, "2023-09": 1848.10, "2023-10": 1983.00, "2023-11": 2038.10, "2023-12": 2062.40, "2024-01": 2048.40, "2024-02": 2045.70, "2024-03": 2217.40, "2024-04": 2291.40, "2024-05": 2322.90, "2024-06": 2327.70, "2024-07": 2426.50, "2024-08": 2493.80, "2024-09": 2630.60, "2024-10": 2738.30, "2024-11": 2657.00, "2024-12": 2624.50, "2025-01": 2812.50, "2025-02": 2858.40 }
+    };
+
+    function recalcAll() {
+      DATA.accounts.forEach(acc => { acc.rows = recalcRows(acc.rows); acc.analytics = computeAnalytics(acc.name, acc.rows); });
+      const activeAll = DATA.accounts;
+      if (activeAll.length) {
+        const aggregated = calcCombinedRows(activeAll);
+        const last = aggregated[aggregated.length - 1];
+        DATA.combined = { rows: aggregated, final_total_invested: last.total_invested, final_total_pv: last.total_pv, final_total_gain: last.gain_total, final_returns_pct: last.returns_pct, final_nav: last.nav, total_months_tracked: aggregated.length };
+        recomputeBenchmarks(aggregated);
+      } else { DATA.combined = null; DATA.benchmarks = []; }
+      generateInsightsText();
+      saveToCache();
+    }
+
+    function recomputeBenchmarks(combinedRows) {
+      if (!combinedRows.length) return;
+      const startDay = combinedRows[0].date;
+      const endDay = combinedRows[combinedRows.length - 1].date;
+      const startMo = startDay.slice(0, 7);
+      const endMo = endDay.slice(0, 7);
+
+      const results = [];
+      Object.keys(BENCHMARK_RAW).forEach(name => {
+        const data = BENCHMARK_RAW[name];
+        let startVal = data[startMo];
+        // If exact month not found, try to find the closest earlier one
+        if (startVal === undefined) {
+          const keys = Object.keys(data).sort();
+          for (let k of keys) { if (k <= startMo) startVal = data[k]; else break; }
+        }
+        if (startVal === undefined) return;
+
+        const prog = {};
+        let lastVal = startVal;
+        combinedRows.forEach(r => {
+          const m = r.date.slice(0, 7);
+          const val = data[m] || lastVal;
+          lastVal = val;
+          prog[r.date] = (val / startVal) * 100;
+        });
+
+        const endVal = data[endMo] || lastVal;
+        const finalNav = (endVal / startVal) * 100;
+
+        // Calculate CAGR
+        const startDt = new Date(startDay);
+        const endDt = new Date(endDay);
+        const years = (endDt - startDt) / (1000 * 60 * 60 * 24 * 365.25);
+        const cagr = years > 0 ? (Math.pow(endVal / startVal, 1 / years) - 1) * 100 : 0;
+
+        results.push({ name, final_nav: finalNav, cagr_pct: cagr, nav_progression: prog });
+      });
+
+      // Fixed Deposit (7%)
+      const fdProg = {};
+      const startDt = new Date(startDay);
+      combinedRows.forEach(r => {
+        const years = (new Date(r.date) - startDt) / (1000 * 60 * 60 * 24 * 365.25);
+        fdProg[r.date] = Math.pow(1.07, years) * 100;
+      });
+      const totalYears = (new Date(endDay) - startDt) / (1000 * 60 * 60 * 24 * 365.25);
+      results.push({ name: "Fixed Deposit (7%)", final_nav: Math.pow(1.07, totalYears) * 100, cagr_pct: 7.0, nav_progression: fdProg });
+
+      DATA.benchmarks = results.sort((a, b) => b.final_nav - a.final_nav);
+    }
+
+    function saveToCache() {
+      if (DATA) {
+        localStorage.setItem('portfolio_data', JSON.stringify(DATA));
+        localStorage.setItem('portfolio_active_accounts', JSON.stringify(Array.from(activeAccounts)));
+      }
+    }
+
+    function resetApp() {
+      if (confirm("Reset current state and import new data?")) {
+        localStorage.removeItem('portfolio_data');
+        localStorage.removeItem('portfolio_active_accounts');
+        location.reload();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  DATA LOADING & GLOBAL STATE
+    // ═══════════════════════════════════════════════════════════════
+    let DATA = null;
+    let activeAccounts = new Set();
+    let chartInstances = {};
+
+    document.getElementById('fileUpload').addEventListener('change', handleFileUpload);
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const errEl = document.getElementById('importError');
+      errEl.style.display = 'none';
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.json')) {
+        reader.onload = ev => {
+          try {
+            DATA = JSON.parse(ev.target.result);
+            if (!DATA.accounts) throw new Error("Invalid structure: missing 'accounts' array");
+            recalcAll();
+            document.getElementById('importOverlay').style.display = 'none';
+            init();
+          } catch (ex) {
+            errEl.textContent = "Error: " + ex.message;
+            errEl.style.display = 'block';
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = ev => {
+          try {
+            const data = new Uint8Array(ev.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            DATA = { accounts: [], benchmarks: [] };
+            workbook.SheetNames.forEach(sheetName => {
+              const lowerName = sheetName.toLowerCase();
+              if (lowerName.includes('summary') || lowerName.includes('readme') || lowerName.includes('instructions') || lowerName.includes('analytics')) return;
+              const ws = workbook.Sheets[sheetName];
+              const jsonRows = XLSX.utils.sheet_to_json(ws, { defval: null });
+              if (!jsonRows.length) return;
+              const rows = [];
+              jsonRows.forEach(jr => {
+                const findKey = (possible) => {
+                  for (let k in jr) {
+                    const cleanK = k.toLowerCase().replace('[input] ', '').replace('[calc] ', '').trim();
+                    if (possible.some(p => cleanK.includes(p))) return jr[k];
+                  }
+                  return null;
+                };
+                let rawDate = jr["date"] || jr["Date"] || jr["Date(YYYY-MM-DD)"] || findKey(['date']);
+                if (!rawDate) return;
+                if (typeof rawDate === 'number') { rawDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000)).toISOString().split('T')[0]; }
+                else if (typeof rawDate === 'string' && rawDate.includes('/')) { const parts = rawDate.split('/'); if (parts.length === 3) rawDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`; }
+                else if (rawDate instanceof Date) { rawDate = rawDate.toISOString().split('T')[0]; }
+                const cf = findKey(['cashflow']) || 0, fc = findKey(['free_cash', 'free cash']) || 0, inv = findKey(['invested']) || 0, pv = findKey(['pv', 'portfolio value']) || 0;
+                rows.push({ date: rawDate, epoch_ms: new Date(rawDate).getTime(), cashflow: Number(cf), free_cash: Number(fc), invested: Number(inv), pv: Number(pv) });
+              });
+              if (rows.length) { rows.sort((a, b) => a.epoch_ms - b.epoch_ms); DATA.accounts.push({ name: sheetName, rows: rows }); }
+            });
+            if (!DATA.accounts.length) throw new Error("No valid account sheets found in the file.");
+            DATA.generated_at = new Date().toLocaleString();
+            recalcAll();
+            DATA.accounts.forEach(a => activeAccounts.add(a.name));
+            document.getElementById('importOverlay').style.display = 'none';
+            init();
+          } catch (ex) {
+            errEl.textContent = "Error: " + ex.message;
+            errEl.style.display = 'block';
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function startBlank() {
+      DATA = { generated_at: new Date().toLocaleString(), accounts: [{ name: "My Account", rows: [{ date: new Date().toISOString().split('T')[0], epoch_ms: Date.now(), cashflow: 0, free_cash: 0, invested: 0, pv: 0 }] }], benchmarks: [] };
+      DATA.accounts.forEach(a => activeAccounts.add(a.name));
+      recalcAll();
+      document.getElementById('importOverlay').style.display = 'none';
+      init();
+    }
+
+    function downloadSampleExcel() {
+      const ws_data = [
+        ["Date", "Cashflow", "Free Cash", "Invested", "PV"],
+        ["2023-01-01", 100000, 5000, 95000, 95000],
+        ["2023-02-01", 50000, 2000, 145000, 153000],
+        ["2023-03-01", 30000, 8000, 165000, 182000]
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sample Account");
+      XLSX.writeFile(wb, "portfolio_sample_template.xlsx");
+    }
+
+    function downloadJSON() {
+      if (!DATA) return;
+      const file = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(file);
+      a.download = `portfolio_analyzer_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    }
+
+    window.addEventListener('load', () => {
+      const cached = localStorage.getItem('portfolio_data');
+      const cachedActive = localStorage.getItem('portfolio_active_accounts');
+      if (cached) {
+        try {
+          DATA = JSON.parse(cached);
+          if (cachedActive) {
+            const arr = JSON.parse(cachedActive);
+            activeAccounts = new Set(arr);
+          } else {
+            DATA.accounts.forEach(a => activeAccounts.add(a.name));
+          }
+          document.getElementById('importOverlay').style.display = 'none';
+          init();
+        } catch (e) { console.error("Cached data corrupt", e); }
+      } else {
+        // No cache: try fetching data.json for initial load (GitHub Pages support)
+        fetch('data.json')
+          .then(res => res.json())
+          .then(json => {
+            DATA = json;
+            DATA.accounts.forEach(a => activeAccounts.add(a.name));
+            recalcAll();
+            document.getElementById('importOverlay').style.display = 'none';
+            init();
+          })
+          .catch(err => {
+            console.log("No data.json found or fetch failed. Showing import overlay.");
+          });
+      }
+    });
+
+    function init() {
+      document.getElementById('generatedAt').textContent = 'Updated: ' + DATA.generated_at;
+      buildAccountTabs();
+      buildToggles();
+      renderOverview();
+      buildInsights();
+      buildAccountTabs_content();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ACCOUNT TABS (dynamic)
+    // ═══════════════════════════════════════════════════════════════
+    function buildAccountTabs() {
+      const tabBar = document.getElementById('tabBar');
+      const insightsBtn = tabBar.querySelector('[data-tab="insights"]');
+
+      // Destroy existing account charts before removing DOM
+      Object.keys(chartInstances).forEach(key => {
+        if (key.startsWith('chartAcc')) {
+          chartInstances[key].destroy();
+          delete chartInstances[key];
+        }
+      });
+
+      Array.from(tabBar.querySelectorAll('button')).forEach(b => { if (b.dataset.tab && b.dataset.tab.startsWith('account-')) b.remove(); });
+      document.querySelectorAll('div[id^="content-account-"]').forEach(d => d.remove());
+
+      DATA.accounts.forEach((acc, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn'; btn.dataset.tab = `account-${i}`; btn.textContent = acc.name;
+        btn.onclick = () => switchTab(`account-${i}`);
+        tabBar.insertBefore(btn, insightsBtn);
+
+        const div = document.createElement('div');
+        div.id = `content-account-${i}`; div.style.display = 'none';
+        div.innerHTML = `
+      <div class="kpi-grid" id="kpiAcc${i}"></div>
+      <div class="chart-card" style="margin-bottom:12px">
+        <div class="chart-title" id="accChartTitle${i}">${acc.name} &mdash; Portfolio Value &amp; NAV</div>
+        <canvas id="chartAcc${i}" style="min-height:240px"></canvas>
+      </div>
+      <div class="chart-card" style="margin-bottom:18px">
+        <div class="chart-title">${acc.name} &mdash; Monthly Returns %
+          <div class="badge">this month's gain/loss</div>
+          <span class="chart-info-tip" title="Period-over-period portfolio return: what % did your total portfolio value change THIS month vs last month. Green bars = portfolio grew, red = shrank. Hover for ₹ amounts and cashflow details. Tall negative bars on months you invested are expected (NAV dilution before PV recovers).">&#9432;</span>
+        </div>
+        <canvas id="chartAccRet${i}" style="min-height:200px"></canvas>
+      </div>
+      <!-- TRANCHE IRR: per-investment holding period returns -->
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px">
+          IRR per Investment Tranche
+          <span class="chart-info-tip" style="font-size:12px;color:var(--muted);cursor:help;" title="For each month when you added money, this shows the annualised return on that specific investment up to today — calculated from NAV at time of investment vs NAV now. Negative = that investment is underwater. Use this to see which buys were timed well.">&#9432;</span>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-bottom:18px; padding:0; overflow:hidden;">
+        <div class="table-scroll"><table class="tranche-table" id="tblTranche${i}"></table></div>
+      </div>
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px">Monthly Data (Editable) <span></span></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll"><table id="tblAcc${i}"></table></div>
+        <div class="editor-actions">
+          <button class="btn" onclick="addEditRow(${i})">+ Add Row</button>
+          <button class="btn btn-accent" onclick="saveEdits(${i})">&#128190; Save</button>
+          <span class="save-status" id="saveStatus${i}"></span>
+        </div>
+      </div>`;
+        document.querySelector('.footer').before(div);
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ACCOUNT TOGGLES
+    // ═══════════════════════════════════════════════════════════════
+    function buildToggles() {
+      const el = document.getElementById('accToggles');
+      el.innerHTML = '<span style="font-size:12px;color:var(--muted);font-weight:600">Show accounts:</span>';
+      DATA.accounts.forEach((acc, i) => {
+        const isActive = activeAccounts.has(acc.name);
+        const btn = document.createElement('div');
+        btn.className = `acc-toggle ${isActive ? 'on' : ''}`; btn.id = `toggle-${i}`;
+        btn.style.cssText = `border-color:${PALETTE[i]};color:${PALETTE[i]}`;
+        btn.innerHTML = `<span class="dot" style="background:${PALETTE[i]}"></span>${acc.name}`;
+        btn.onclick = () => {
+          if (activeAccounts.has(acc.name) && activeAccounts.size === 1) return;
+          if (activeAccounts.has(acc.name)) { activeAccounts.delete(acc.name); btn.classList.remove('on'); }
+          else { activeAccounts.add(acc.name); btn.classList.add('on'); }
+          renderOverview();
+          saveToCache();
+        };
+        el.appendChild(btn);
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  OVERVIEW RENDERING
+    // ═══════════════════════════════════════════════════════════════
+    function renderOverview() {
+      destroyCharts(['chartPV', 'chartNAV', 'chartXIRR', 'chartReturns', 'chartCashflow', 'chartGains', 'chartConcentration']);
+      const active = DATA.accounts.filter(a => activeAccounts.has(a.name));
+      buildKPIs(active);
+      buildConcentration(active);
+      buildCharts(active);
+      buildCompare(active);
+      buildCorrelationMatrix(active);
+      buildCombinedTrancheTable(active);
+      buildBenchmarks(active);
+      buildCombinedTable(active);
+    }
+
+    function destroyCharts(ids) {
+      if (!ids) {
+        // Destroy ALL
+        Object.keys(chartInstances).forEach(id => {
+          chartInstances[id].destroy();
+          delete chartInstances[id];
+        });
+        return;
+      }
+      ids.forEach(id => { if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; } });
+    }
+
+    function buildKPIs(active) {
+      const totInv = active.reduce((s, a) => s + (a.analytics.final_total_invested || 0), 0);
+      const totPV = active.reduce((s, a) => s + (a.analytics.final_total_pv || 0), 0);
+      const totGain = active.reduce((s, a) => s + (a.analytics.final_gain_total || 0), 0);
+      const ret = totInv ? totGain / totInv * 100 : 0;
+
+      let portXirr = 0, finalNav = 100, years = 0;
+
+      if (active.length === 1) {
+        portXirr = active[0].analytics.xirr_pct;
+        finalNav = active[0].analytics.final_nav;
+        const start = new Date(active[0].analytics.start_date), end = new Date(active[0].analytics.end_date);
+        years = (end - start) / (365.25 * 24 * 3600 * 1000);
+      } else {
+        const aggregated = calcCombinedRows(active);
+        if (aggregated.length) {
+          const last = aggregated[aggregated.length - 1];
+          portXirr = last.monthly_xirr_pct || 0;
+          finalNav = last.nav || 100;
+          const start = new Date(aggregated[0].date), end = new Date(last.date);
+          years = (end - start) / (365.25 * 24 * 3600 * 1000);
+        }
+      }
+      const cagr = years > 0 ? (Math.pow(finalNav / 100, 1 / years) - 1) * 100 : 0;
+
+      document.getElementById('kpiGrid').innerHTML = [
+        kpiCard('total_invested', 'Net Cashflow (Total Invested)', fmt(totInv), 'overall invested', 'neutral'),
+        kpiCard('pv', 'Current Value (PV)', fmt(totPV), 'current portfolio value', 'neutral'),
+        kpiCard('gain_total', 'Total Gain', fmt(totGain), fmtp(ret) + ' total return', cls(totGain)),
+        kpiCard('xirr', 'Portfolio XIRR', fmtp(portXirr), 'annualised money-weighted', cls(portXirr)),
+        kpiCard('nav', 'Performance (NAV)', fmtNav(finalNav), 'Annualised CAGR: ' + fmtp(cagr), 'neutral'),
+      ].join('');
+    }
+
+    function calcCombinedRows(activeAccountsList) {
+      // Compute aggregated rows purely for the active accounts array
+      const allDates = [...new Set(activeAccountsList.flatMap(a => a.rows.map(r => r.date)))].sort();
+      let c_units = null;
+      let c_nav_prev = 100.0;
+      const aggregated = [];
+
+      allDates.forEach(d => {
+        let tot_cf = 0, tot_fc = 0, tot_inv = 0, tot_pv = 0, tot_unreal = 0, tot_real = 0, tot_gain = 0, tot_invested = 0;
+        activeAccountsList.forEach(a => {
+          // get row on or before date d
+          let validRow = null;
+          for (let r of a.rows) {
+            if (r.date <= d) validRow = r;
+            else break;
+          }
+          if (validRow) {
+            if (validRow.date === d) {
+              tot_cf += validRow.cashflow || 0;
+            }
+            tot_fc += validRow.free_cash || 0;
+            tot_inv += validRow.invested || 0;
+            tot_pv += validRow.pv || 0;
+            tot_invested += validRow.total_invested || 0;
+            tot_unreal += validRow.gain_unrealised || 0;
+            tot_real += validRow.gain_realised || 0;
+            tot_gain += validRow.gain_total || 0;
+          }
+        });
+
+        // MF style combined NAV
+        let c_nav = 100;
+        if (c_units === null) {
+          c_units = tot_pv / 100; c_nav = 100;
+        } else {
+          if (c_nav_prev > 0) c_units += tot_cf / c_nav_prev;
+          c_nav = c_units > 0 ? tot_pv / c_units : 100;
+        }
+        c_nav_prev = c_nav;
+
+        const returns_pct = tot_invested ? tot_gain / tot_invested * 100 : 0;
+
+        aggregated.push({
+          date: d,
+          cashflow: tot_cf, free_cash: tot_fc, invested: tot_inv, pv: tot_pv,
+          total_invested: tot_invested, total_pv: tot_pv,
+          gain_unrealised: tot_unreal, gain_realised: tot_real, gain_total: tot_gain,
+          returns_pct: returns_pct, nav: c_nav, monthly_xirr_pct: null
+        });
+      });
+      aggregated.forEach((r, idx) => {
+        if (idx > 0) { const rate = calcXIRR(aggregated.slice(0, idx + 1)); r.monthly_xirr_pct = rate !== null ? rate * 100 : null; }
+      });
+      return aggregated;
+    }
+
+    function buildCharts(active) {
+      const aggregated = (active.length === 1) ? active[0].rows : calcCombinedRows(active);
+      const allDates = aggregated.map(r => r.date.slice(0, 7));
+
+      // 1. PV Over Time
+      const pvDatasets = active.map((acc) => {
+        const m = {}; acc.rows.forEach(r => { m[r.date.slice(0, 7)] = r.total_pv; });
+        const globalIdx = DATA.accounts.indexOf(acc);
+        return { label: acc.name, data: allDates.map(d => m[d] ?? null), borderColor: PALETTE[globalIdx % PALETTE.length], backgroundColor: pa(globalIdx % PALETTE.length, .08), fill: false, tension: .4, pointRadius: 4, spanGaps: true };
+      });
+      if (active.length > 1) pvDatasets.push({ label: 'Combined', data: aggregated.map(r => r.total_pv), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
+      chartInstances['chartPV'] = new Chart(document.getElementById('chartPV'), { type: 'line', data: { labels: allDates, datasets: pvDatasets }, options: { responsive: true, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } } }, scales: { ...baseScales, y: { ...baseScales.y, ticks: { callback: v => fmt(v) } } } } });
+
+      // 2. NAV Progression
+      const navDatasets = active.map((acc) => {
+        const m = {}; acc.rows.forEach(r => { m[r.date.slice(0, 7)] = r.nav; });
+        const globalIdx = DATA.accounts.indexOf(acc);
+        return { label: acc.name, data: allDates.map(d => m[d] ?? null), borderColor: PALETTE[globalIdx % PALETTE.length], backgroundColor: pa(globalIdx % PALETTE.length, .08), fill: false, tension: .4, pointRadius: 4, spanGaps: true };
+      });
+      if (active.length > 1) navDatasets.push({ label: 'Combined', data: aggregated.map(r => r.nav), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
+
+      // Inject Global Benchmarks into NAV chart
+      // FIX: allDates keys are YYYY-MM, nav_progression keys are YYYY-MM-DD — normalise to YYYY-MM lookup
+      if (DATA.benchmarks && DATA.benchmarks.length) {
+        const BCOLORS = {
+          "Nifty 50": "rgba(255, 153, 0, 0.9)",
+          "Nasdaq": "rgba(0, 153, 255, 0.9)",
+          "Gold": "rgba(255, 215, 0, 0.9)",
+          "Fixed Deposit (7%)": "rgba(180, 180, 180, 0.7)",
+          "Midcap 150": "rgba(255, 100, 200, 0.9)"
+        };
+        DATA.benchmarks.forEach(b => {
+          if (!b.nav_progression) return;
+          // Build a YYYY-MM → value map (keys may be YYYY-MM-DD or YYYY-MM)
+          const bMap = {};
+          Object.keys(b.nav_progression).forEach(k => { bMap[k.slice(0, 7)] = b.nav_progression[k]; });
+          const bData = allDates.map(d => bMap[d] ?? null);
+          navDatasets.push({
+            label: b.name,
+            data: bData,
+            borderColor: BCOLORS[b.name] || 'rgba(100,100,100,0.7)',
+            fill: false,
+            tension: 0.3,
+            borderDash: [4, 3],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            spanGaps: true
+          });
+        });
+      }
+
+      chartInstances['chartNAV'] = new Chart(document.getElementById('chartNAV'), {
+        type: 'line',
+        data: { labels: allDates, datasets: navDatasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtNav(c.raw)}` } } },
+          scales: { ...baseScales, y: { ...baseScales.y, ticks: { callback: v => v.toFixed(1) } } }
+        }
+      });
+
+      // 2.5 XIRR Progression — skip first 2 rows to avoid the mathematically-correct-but-useless 1600%+ startup spike
+      const xirrDatasets = active.map((acc) => {
+        const m = {}; acc.rows.forEach((r, idx) => { if (idx >= 2) m[r.date.slice(0, 7)] = r.monthly_xirr_pct; });
+        const globalIdx = DATA.accounts.indexOf(acc);
+        return { label: acc.name, data: allDates.map(d => m[d] ?? null), borderColor: PALETTE[globalIdx % PALETTE.length], backgroundColor: pa(globalIdx % PALETTE.length, .08), fill: false, tension: .4, pointRadius: 4, spanGaps: true };
+      });
+      if (active.length > 1) xirrDatasets.push({ label: 'Combined', data: aggregated.map(r => r.monthly_xirr_pct), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
+      // Compute suggestedMax for XIRR chart (cap at 200% to avoid huge initial spikes)
+      const xirrVals = active.flatMap(acc => acc.rows.map(r => r.monthly_xirr_pct || 0)).filter(v => Math.abs(v) < 300);
+      const xirrMax = Math.min(200, Math.max(...xirrVals, 20));
+      const xirrMin = Math.max(-100, Math.min(...xirrVals, -20));
+
+      chartInstances['chartXIRR'] = new Chart(document.getElementById('chartXIRR'), {
+        type: 'line',
+        data: { labels: allDates, datasets: xirrDatasets },
+        options: {
+          responsive: true, interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtp(c.raw)}` } }
+          },
+          scales: {
+            ...baseScales,
+            y: { ...baseScales.y, suggestedMin: xirrMin, suggestedMax: xirrMax, ticks: { callback: v => v + '%' } }
+          }
+        }
+      });
+
+      // 3. Monthly Returns % — uses monthly_return_pct (period-over-period, NOT cumulative)
+      const retDatasets = active.map((acc) => {
+        const m = {}; acc.rows.forEach(r => { m[r.date.slice(0, 7)] = r.monthly_return_pct; });
+        const globalIdx = DATA.accounts.indexOf(acc);
+        const color = PALETTE[globalIdx % PALETTE.length];
+        return {
+          label: acc.name, data: allDates.map(d => m[d] ?? null),
+          backgroundColor: allDates.map(d => { const v = m[d]; return v == null ? 'transparent' : v >= 0 ? pa(globalIdx % PALETTE.length, .75) : 'rgba(255,79,94,.65)'; }),
+          borderColor: allDates.map(d => { const v = m[d]; return v == null ? 'transparent' : v >= 0 ? color : '#ff4f5e'; }),
+          borderWidth: 1, borderRadius: 4
+        };
+      });
+      // Cap axis at ±40% — periodic monthly changes rarely exceed this outside extreme events
+      const retVals = active.flatMap(acc => acc.rows.map(r => r.monthly_return_pct || 0)).filter(v => Math.abs(v) < 90);
+      const retMax = Math.min(40, Math.max(...retVals, 5));
+      const retMin = Math.max(-40, Math.min(...retVals, -5));
+
+      chartInstances['chartReturns'] = new Chart(document.getElementById('chartReturns'), {
+        type: 'bar',
+        data: { labels: allDates, datasets: retDatasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtp(c.raw)}` } }
+          },
+          scales: {
+            ...baseScales,
+            y: { ...baseScales.y, suggestedMin: retMin, suggestedMax: retMax, ticks: { callback: v => v + '%' } }
+          }
+        }
+      });
+
+      // 4. Cashflow vs Portfolio Value — shows both net invested and current value on same chart
+      const cfDatasets = active.flatMap((acc) => {
+        let cum = 0; const mCF = {}, mPV = {};
+        acc.rows.forEach(r => { cum += r.cashflow || 0; mCF[r.date.slice(0, 7)] = cum; mPV[r.date.slice(0, 7)] = r.total_pv; });
+        const globalIdx = DATA.accounts.indexOf(acc);
+        const col = PALETTE[globalIdx % PALETTE.length];
+        const datasets = [
+          { label: acc.name + ' Invested', data: allDates.map(d => mCF[d] ?? null), borderColor: col, backgroundColor: pa(globalIdx % PALETTE.length, .12), fill: false, tension: .4, spanGaps: true, borderDash: [4, 3], pointRadius: 2 },
+          { label: acc.name + ' Current Value', data: allDates.map(d => mPV[d] ?? null), borderColor: col, backgroundColor: pa(globalIdx % PALETTE.length, .18), fill: true, tension: .4, spanGaps: true, pointRadius: 3 }
+        ];
+        if (active.length > 1) return datasets; // show both lines per account when multi-account
+        return datasets; // single account: same
+      });
+      chartInstances['chartCashflow'] = new Chart(document.getElementById('chartCashflow'), {
+        type: 'line',
+        data: { labels: allDates, datasets: cfDatasets },
+        options: {
+          responsive: true, interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } }
+          },
+          scales: { ...baseScales, y: { ...baseScales.y, ticks: { callback: v => fmt(v) } } }
+        }
+      });
+
+      // 5. Gain Composition — Stacked Bar (Unrealised + Realised)
+      const gainDatasets = active.flatMap((acc) => {
+        const globalIdx = DATA.accounts.indexOf(acc);
+        return [
+          {
+            label: acc.name + ' Unrealised',
+            data: allDates.map(d => { const r = acc.rows.find(x => x.date.slice(0, 7) === d); return r ? r.gain_unrealised : null; }),
+            backgroundColor: pa(globalIdx % PALETTE.length, .75),
+            borderColor: PALETTE[globalIdx % PALETTE.length],
+            borderWidth: 1, borderRadius: 3, stack: acc.name, spanGaps: true
+          },
+          {
+            label: acc.name + ' Realised',
+            data: allDates.map(d => { const r = acc.rows.find(x => x.date.slice(0, 7) === d); return r ? r.gain_realised : null; }),
+            backgroundColor: pa(globalIdx % PALETTE.length, .35),
+            borderColor: PALETTE[globalIdx % PALETTE.length],
+            borderWidth: 1, borderRadius: 3, stack: acc.name, spanGaps: true
+          },
+        ];
+      });
+      chartInstances['chartGains'] = new Chart(document.getElementById('chartGains'), {
+        type: 'bar',
+        data: { labels: allDates, datasets: gainDatasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12 } },
+            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } }
+          },
+          scales: {
+            ...baseScales,
+            x: { ...baseScales.x, stacked: true },
+            y: { ...baseScales.y, stacked: true, ticks: { callback: v => fmt(v) } }
+          }
+        }
+      });
+    }
+
+    function buildCompare(active) {
+      const maxPV = Math.max(...active.map(a => a.analytics.final_total_pv || 0));
+      document.getElementById('compareGrid').innerHTML = active.map((acc, i) => {
+        const a = acc.analytics, idx = DATA.accounts.findIndex(x => x.name === acc.name);
+        const pct = maxPV ? (a.final_total_pv / maxPV * 100).toFixed(1) : 0;
+        return `<div class="compare-card">
+      <div class="compare-name"><span class="dot" style="background:${PALETTE[idx]}"></span>${acc.name}</div>
+      <div class="stat-row"><span class="stat-label">${tip('total_invested', 'Total Invested')}</span><span class="stat-val">${fmt(a.final_total_invested)}</span></div>
+      <div class="stat-row"><span class="stat-label">${tip('pv', 'Current Value')}</span><span class="stat-val">${fmt(a.final_total_pv)}</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${PALETTE[idx]}"></div></div>
+      <div style="height:10px"></div>
+      <div class="stat-row"><span class="stat-label">${tip('gain_total', 'Total Gain')}</span><span class="stat-val ${cls(a.final_gain_total)}">${fmt(a.final_gain_total)}</span></div>
+      <div class="stat-row"><span class="stat-label">${tip('returns_pct', 'Returns %')}</span><span class="stat-val ${cls(a.final_returns_pct)}">${fmtp(a.final_returns_pct)}</span></div>
+      <div class="stat-row"><span class="stat-label">${tip('xirr', 'XIRR')}</span><span class="stat-val ${cls(a.xirr_pct)}">${fmtp(a.xirr_pct)}</span></div>
+      <div class="stat-row"><span class="stat-label">${tip('nav', 'Final NAV')}</span><span class="stat-val neutral">${fmtNav(a.final_nav)}</span></div>
+      <div class="stat-row"><span class="stat-label">Best Month</span><span class="stat-val positive">${a.best_month.date.slice(0, 7)} (${fmtp(a.best_month.monthly_return_pct)})</span></div>
+      <div class="stat-row"><span class="stat-label">Worst Month</span><span class="stat-val negative">${a.worst_month.date.slice(0, 7)} (${fmtp(a.worst_month.monthly_return_pct)})</span></div>
+      <div class="stat-row"><span class="stat-label">Max Drawdown</span><span class="stat-val negative">-${a.max_drawdown_pct}%</span></div>
+      <div class="stat-row"><span class="stat-label">Consec. Neg. Months</span><span class="stat-val">${a.max_consecutive_negative_months}</span></div>
+      <div class="stat-row"><span class="stat-label">Avg Monthly Return</span><span class="stat-val ${cls(a.avg_monthly_return_pct)}">${fmtp(a.avg_monthly_return_pct)}</span></div>
+      <div class="stat-row"><span class="stat-label">Portfolio Vol (ann.)</span><span class="stat-val">${fmtp(a.volatility_pct)}</span></div>
+      <div class="stat-row"><span class="stat-label">NAV Vol (ann.)</span><span class="stat-val">${fmtp(a.nav_volatility_pct)}</span></div>
+      <div class="stat-row"><span class="stat-label" title="(XIRR - 7% risk-free) ÷ NAV Volatility. &gt;2=Excellent, &gt;1=Good, &gt;0=OK, &lt;0=Underperforming vs risk. Compare across your accounts." style="cursor:help;border-bottom:1px dotted var(--muted)">Sharpe Ratio</span><span class="stat-val">${sharpeBadge(a.sharpe_ratio)}</span></div>
+    </div>`;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CORRELATION MATRIX
+    // ═══════════════════════════════════════════════════════════════
+    function pearsonCorr(a, b) {
+      // Compute Pearson r between two arrays — uses only overlapping non-null indices
+      const pairs = a.map((v, i) => [v, b[i]]).filter(([x, y]) => x != null && y != null && !isNaN(x) && !isNaN(y));
+      if (pairs.length < 3) return null;
+      const n = pairs.length;
+      const meanA = pairs.reduce((s, p) => s + p[0], 0) / n;
+      const meanB = pairs.reduce((s, p) => s + p[1], 0) / n;
+      const num = pairs.reduce((s, p) => s + (p[0] - meanA) * (p[1] - meanB), 0);
+      const denA = Math.sqrt(pairs.reduce((s, p) => s + Math.pow(p[0] - meanA, 2), 0));
+      const denB = Math.sqrt(pairs.reduce((s, p) => s + Math.pow(p[1] - meanB, 2), 0));
+      if (denA === 0 || denB === 0) return null;
+      return Math.round(num / (denA * denB) * 1000) / 1000;
+    }
+
+    function buildCorrelationMatrix(active) {
+      const section = document.getElementById('correlationSection');
+      if (!section) return;
+      if (active.length < 2) { section.style.display = 'none'; return; }
+      section.style.display = '';
+
+      const n = active.length;
+
+      // Build a shared date-keyed return map per account
+      const retMaps = active.map(acc => {
+        const m = {};
+        acc.rows.slice(1).forEach(r => { m[r.date.slice(0, 7)] = r.monthly_return_pct; });
+        return m;
+      });
+
+      // Collect all dates across all active accounts (sorted)
+      const allDatesSet = new Set(retMaps.flatMap(m => Object.keys(m)));
+      const allDates = [...allDatesSet].sort();
+
+      // Build vectors aligned to allDates (null when account has no data for a month)
+      const vecs = retMaps.map(m => allDates.map(d => m[d] ?? null));
+
+      // Compute full n×n correlation matrix
+      const matrix = Array.from({ length: n }, (_, i) =>
+        Array.from({ length: n }, (_, j) => i === j ? 1.0 : pearsonCorr(vecs[i], vecs[j]))
+      );
+
+      // Color function: high corr → red, mid → yellow, low → green, diagonal → accent purple
+      function corrColor(r, isDiag) {
+        if (isDiag) return { bg: 'rgba(108,99,255,0.25)', text: 'rgba(108,99,255,0.9)' };
+        if (r === null) return { bg: 'rgba(255,255,255,0.05)', text: 'var(--muted)' };
+        const abs = Math.abs(r);
+        if (abs >= 0.8) return { bg: r > 0 ? 'rgba(255,79,94,0.30)' : 'rgba(0,212,170,0.30)', text: r > 0 ? '#ff4f5e' : '#00d4aa' };
+        if (abs >= 0.5) return { bg: r > 0 ? 'rgba(255,180,0,0.22)' : 'rgba(0,212,170,0.18)', text: r > 0 ? '#ffa94d' : '#00d4aa' };
+        return { bg: 'rgba(0,212,170,0.15)', text: '#00d4aa' };
+      }
+
+      function corrLabel(r) {
+        if (r === null) return 'no overlap';
+        const abs = Math.abs(r);
+        const dir = r > 0 ? '' : 'inverse ';
+        if (abs >= 0.8) return dir + 'very high';
+        if (abs >= 0.6) return dir + 'high';
+        if (abs >= 0.4) return dir + 'moderate';
+        if (abs >= 0.2) return dir + 'low';
+        return 'uncorrelated';
+      }
+
+      // Build grid HTML
+      // Grid: (n+1) × (n+1) — first row/col are labels
+      const gridCols = n + 1;
+      const cells = [];
+
+      // Top-left empty corner
+      cells.push(`<div class="corr-cell" style="background:transparent;"></div>`);
+
+      // Column headers
+      active.forEach((acc, j) => {
+        const idx = DATA.accounts.indexOf(acc);
+        cells.push(`<div class="corr-cell" style="background:transparent; color:${PALETTE[idx % PALETTE.length]}; font-weight:700; font-size:10px; height:36px;">${acc.name}</div>`);
+      });
+
+      // Data rows
+      active.forEach((accRow, i) => {
+        const idxR = DATA.accounts.indexOf(accRow);
+        // Row label
+        cells.push(`<div class="corr-cell" style="background:transparent; color:${PALETTE[idxR % PALETTE.length]}; font-weight:700; font-size:10px; width:72px; text-align:right; padding-right:6px;">${accRow.name}</div>`);
+        // Data cells
+        active.forEach((accCol, j) => {
+          const r = matrix[i][j];
+          const { bg, text } = corrColor(r, i === j);
+          const disp = r === null ? 'N/A' : (i === j ? '1.00' : r.toFixed(2));
+          const label = i === j ? 'self' : corrLabel(r);
+          cells.push(`<div class="corr-cell" style="background:${bg}; color:${text};">
+            <div class="corr-cell-val">${disp}</div>
+            <div class="corr-cell-label">${label}</div>
+          </div>`);
+        });
+      });
+
+      // Verdict: find highest off-diagonal absolute correlation
+      const offDiag = [];
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const r = matrix[i][j];
+        if (r !== null) offDiag.push({ r, a: active[i].name, b: active[j].name });
+      }
+      offDiag.sort((x, y) => Math.abs(y.r) - Math.abs(x.r));
+
+      let verdict = '', verdictBg = '';
+      if (offDiag.length) {
+        const top = offDiag[0];
+        const absTop = Math.abs(top.r);
+        if (absTop >= 0.8) {
+          verdict = `⚠️ <strong>${top.a}</strong> and <strong>${top.b}</strong> are highly correlated (r = ${top.r.toFixed(2)}). They tend to move together — this is <strong>false diversification</strong>. A market downturn will likely hit both.`;
+          verdictBg = 'rgba(255,79,94,0.10)';
+        } else if (absTop >= 0.5) {
+          verdict = `🟡 <strong>${top.a}</strong> and <strong>${top.b}</strong> have moderate correlation (r = ${top.r.toFixed(2)}). There is some diversification benefit, but they are not fully independent.`;
+          verdictBg = 'rgba(255,180,0,0.10)';
+        } else {
+          verdict = `✅ Your accounts are <strong>low-correlated</strong> (highest pair r = ${top.r.toFixed(2)}). This indicates genuine diversification — they don't all move together.`;
+          verdictBg = 'rgba(0,212,170,0.10)';
+        }
+      }
+
+      document.getElementById('corrWrap').innerHTML = `
+        <div class="corr-header">
+          <h4>Monthly Return Correlation (Pearson r) &mdash; ${allDates.length} shared months</h4>
+        </div>
+        <div class="corr-matrix" style="grid-template-columns: repeat(${gridCols}, auto);">
+          ${cells.join('')}
+        </div>
+        ${verdict ? `<div class="corr-verdict" style="background:${verdictBg};">${verdict}</div>` : ''}
+        <div class="corr-legend">
+          <span class="corr-legend-item"><span class="corr-legend-swatch" style="background:rgba(255,79,94,0.40)"></span> High (&ge;0.8) — false diversification</span>
+          <span class="corr-legend-item"><span class="corr-legend-swatch" style="background:rgba(255,180,0,0.35)"></span> Moderate (0.5–0.8)</span>
+          <span class="corr-legend-item"><span class="corr-legend-swatch" style="background:rgba(0,212,170,0.30)"></span> Low (&lt;0.5) — good diversification</span>
+          <span class="corr-legend-item"><span class="corr-legend-swatch" style="background:rgba(108,99,255,0.25)"></span> Self (diagonal)</span>
+        </div>
+      `;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  FEATURE 1: PORTFOLIO CONCENTRATION DONUT
+    // ═══════════════════════════════════════════════════════════════
+    function buildConcentration(active) {
+      const sec = document.getElementById('concentrationSection');
+      if (!sec) return;
+      if (active.length < 2) { sec.style.display = 'none'; return; }
+      sec.style.display = '';
+
+      const labels = active.map(a => a.name);
+      const pvs = active.map(a => a.analytics.final_total_pv || 0);
+      const total = pvs.reduce((s, v) => s + v, 0);
+      const colors = active.map((a, i) => PALETTE[DATA.accounts.indexOf(a) % PALETTE.length]);
+
+      chartInstances['chartConcentration'] = new Chart(document.getElementById('chartConcentration'), {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data: pvs, backgroundColor: colors.map(c => c + 'cc'), borderColor: colors, borderWidth: 2, hoverOffset: 8 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.raw)} (${total ? (c.raw / total * 100).toFixed(1) : 0}%)` } }
+          }
+        }
+      });
+
+      // Custom legend
+      document.getElementById('concLegend').innerHTML = active.map((acc, i) => {
+        const pct = total ? (pvs[i] / total * 100).toFixed(1) : '0.0';
+        const col = colors[i];
+        return `<div class="conc-legend-item">
+          <div class="conc-swatch" style="background:${col}"></div>
+          <div class="conc-name">${acc.name}</div>
+          <div class="conc-pct">${pct}%</div>
+          <div class="conc-val">${fmt(pvs[i])}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  FEATURE 2 helper: SHARPE BADGE
+    // ═══════════════════════════════════════════════════════════════
+    function sharpeBadge(s) {
+      if (s === null || s === undefined) return '<span style="color:var(--muted)">N/A</span>';
+      const cls = s >= 2 ? 'sharpe-exc' : s >= 1 ? 'sharpe-good' : s >= 0 ? 'sharpe-ok' : 'sharpe-bad';
+      const label = s >= 2 ? 'Excellent' : s >= 1 ? 'Good' : s >= 0 ? 'Below avg' : 'Poor';
+      return `<strong>${s.toFixed(2)}</strong> <span class="sharpe-badge ${cls}">${label}</span>`;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  FEATURE 4: IRR PER INVESTMENT TRANCHE
+    // ═══════════════════════════════════════════════════════════════
+    function buildTrancheTable(acc, tableId) {
+      const tbl = document.getElementById(tableId);
+      if (!tbl || !acc.rows.length) return;
+
+      const lastRow = acc.rows[acc.rows.length - 1];
+      const navNow = lastRow.nav || 100;
+      const dateNow = lastRow.date;
+
+      // Only show rows with any cashflow
+      const cashflowRows = acc.rows.filter(r => (r.cashflow || 0) !== 0);
+      if (!cashflowRows.length) {
+        tbl.innerHTML = '<tr><td colspan="6" style="color:var(--muted);padding:16px;text-align:center;">No cashflow events found.</td></tr>';
+        return;
+      }
+
+      // NOTE: Without trade-level data we cannot attribute withdrawals to specific buy lots.
+      // Tranche IRR = (navNow / navAtBuy)^(1/years) - 1
+      // This is the NAV growth rate from that date — a timing quality score, not a P&L.
+      const hdr = `<thead><tr>
+        <th>Month</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>NAV at Event</th>
+        <th>NAV Now</th>
+        <th>Holding</th>
+        <th title="How much the portfolio's NAV grew since this date, annualised. This is a timing quality score — NOT a P&amp;L statement (we don't have trade data to attribute gains to individual cashflows).">Timing IRR &#9432;</th>
+      </tr></thead>`;
+
+      const rows = cashflowRows.map(r => {
+        const nav = r.nav || 100;
+        const cf = r.cashflow || 0;
+        const yearsDiff = (new Date(dateNow) - new Date(r.date)) / (365.25 * 24 * 3600 * 1000);
+        const months = Math.round(yearsDiff * 12);
+
+        if (cf > 0) {
+          const irrAnnual = yearsDiff > 0 && nav > 0 ? (Math.pow(navNow / nav, 1 / yearsDiff) - 1) * 100 : 0;
+          const irrCls = irrAnnual >= 0 ? 'positive' : 'negative';
+          const navGrowth = nav > 0 ? ((navNow / nav - 1) * 100).toFixed(1) : '—';
+          return `<tr>
+            <td>${r.date.slice(0, 7)}</td>
+            <td><span style="color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.5px">INVEST</span></td>
+            <td>${fmt(cf)}</td>
+            <td>${fmtNav(nav)}</td>
+            <td>${fmtNav(navNow)}</td>
+            <td>${months}m</td>
+            <td class="${irrCls}" title="NAV grew ${navGrowth}% total since this investment">
+              <strong>${fmtp(irrAnnual)}</strong>
+              <span style="font-size:9px;color:var(--muted);margin-left:4px">(${navGrowth}% total)</span>
+            </td>
+          </tr>`;
+        } else {
+          // Redemption — show as context row; IRR at time of exit
+          const irrAtExit = yearsDiff > 0 && nav > 0 ? (Math.pow(nav / 100, 1 / yearsDiff) - 1) * 100 : 0;
+          return `<tr style="opacity:0.65;background:rgba(255,180,0,.04)">
+            <td>${r.date.slice(0, 7)}</td>
+            <td><span style="color:#ffa94d;font-size:10px;font-weight:600;letter-spacing:.5px">REDEEM</span></td>
+            <td class="negative">${fmt(cf)}</td>
+            <td>${fmtNav(nav)}</td>
+            <td style="color:var(--muted)">—</td>
+            <td>${months}m</td>
+            <td style="color:var(--muted);font-size:11px">NAV was ${fmtNav(nav)} at exit</td>
+          </tr>`;
+        }
+      }).join('');
+
+      // Footer shows actual totals from analytics — the only ground-truth numbers
+      const a = acc.analytics;
+      const footerRow = `<tr style="background:rgba(108,99,255,.08);font-weight:700;font-size:12px;">
+        <td colspan="2">PORTFOLIO ACTUAL</td>
+        <td>${fmt(a.final_total_invested)}</td>
+        <td colspan="2" style="color:var(--muted);font-size:10px;font-weight:400">Current PV: ${fmt(a.final_total_pv)}</td>
+        <td colspan="2">
+          <span class="${a.final_gain_total >= 0 ? 'positive' : 'negative'}">${fmt(a.final_gain_total)}</span>
+          <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:6px">= XIRR ${fmtp(a.xirr_pct)}</span>
+        </td>
+      </tr>
+      <tr><td colspan="7" style="font-size:10px;color:var(--muted);padding:6px 10px;font-style:italic;">
+        ⓘ Timing IRR = portfolio NAV growth rate since that buy date. Without trade-level data, per-tranche ₹ gain cannot be computed precisely.
+      </td></tr>`;
+
+      tbl.innerHTML = hdr + '<tbody>' + rows + footerRow + '</tbody>';
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════
+    //  FEATURE 5: ANNUAL / MONTHLY TABLE TOGGLE
+    // ═══════════════════════════════════════════════════════════════
+    let _tableViewActive = null; // holds last active accounts to re-render
+
+    function setTableView(mode) {
+      document.getElementById('btnMonthly').classList.toggle('active', mode === 'monthly');
+      document.getElementById('btnAnnual').classList.toggle('active', mode === 'annual');
+      if (_tableViewActive) buildCombinedTable(_tableViewActive, mode);
+    }
+
+    function buildCombinedTable(active, mode) {
+      _tableViewActive = active; // cache for toggle
+      const currentMode = mode || (document.getElementById('btnAnnual')?.classList.contains('active') ? 'annual' : 'monthly');
+      const aggregated = calcCombinedRows(active);
+      if (!aggregated.length) return;
+
+      if (currentMode === 'annual') {
+        _buildAnnualTable(aggregated);
+      } else {
+        _buildMonthlyTable(aggregated);
+      }
+    }
+
+    function _buildMonthlyTable(aggregated) {
+      const cols = [
+        { k: 'date', label: 'Date', tip: false }, { k: 'cashflow', label: 'Cashflow', tip: true },
+        { k: 'total_invested', label: 'Total Cashflow', tip: true }, { k: 'total_pv', label: 'Total PV', tip: true },
+        { k: 'gain_unrealised', label: 'Gain Unreal.', tip: true }, { k: 'gain_realised', label: 'Gain Real.', tip: true },
+        { k: 'gain_total', label: 'Gain Total', tip: true }, { k: 'returns_pct', label: 'Returns %', tip: true },
+        { k: 'monthly_xirr_pct', label: 'Running XIRR (Ann.)', tip: true }, { k: 'monthly_return_pct', label: 'Monthly Return %', tip: false }, { k: 'nav', label: 'NAV', tip: true },
+      ];
+      const hdr = cols.map(c => `<th>${c.tip ? tip(c.k, c.label) : c.label}</th>`).join('');
+      const body = aggregated.map(r => {
+        const vals = cols.map(c => {
+          const v = r[c.k];
+          if (c.k === 'date') return `<td>${r.date}</td>`;
+          if (c.k === 'nav') return `<td>${fmtNav(v)}</td>`;
+          if (c.k === 'returns_pct' || c.k === 'monthly_xirr_pct' || c.k === 'monthly_return_pct') return `<td class="${v >= 0 ? 'ret-pos' : 'ret-neg'}">${fmtp(v)}</td>`;
+          const isGain = c.k.startsWith('gain');
+          return `<td class="${isGain ? cls(v) : ''}">${fmt(v)}</td>`;
+        });
+        return `<tr>${vals.join('')}</tr>`;
+      }).join('');
+      document.getElementById('tblCombined').innerHTML = `<thead><tr>${hdr}</tr></thead><tbody>${body}</tbody>`;
+    }
+
+    function _buildAnnualTable(aggregated) {
+      // Group rows by year, take year-end values
+      const byYear = {};
+      aggregated.forEach(r => {
+        const yr = r.date.slice(0, 4);
+        byYear[yr] = r; // last row of each year wins
+      });
+      // Also sum cashflows per year
+      const cfByYear = {};
+      aggregated.forEach(r => {
+        const yr = r.date.slice(0, 4);
+        cfByYear[yr] = (cfByYear[yr] || 0) + (r.cashflow || 0);
+      });
+
+      const years = Object.keys(byYear).sort();
+      const hdr = `<tr>
+        <th>Year</th><th>Cashflow</th><th>Year-End PV</th>
+        <th>Gain Total</th><th>Cumulative Return %</th><th>Running XIRR</th><th>NAV (Year-End)</th>
+        <th>Monthly Return % (avg)</th>
+      </tr>`;
+
+      // Compute per-year avg monthly return
+      const monthlyRetsByYear = {};
+      aggregated.forEach(r => {
+        const yr = r.date.slice(0, 4);
+        if (!monthlyRetsByYear[yr]) monthlyRetsByYear[yr] = [];
+        if (r.monthly_return_pct != null) monthlyRetsByYear[yr].push(r.monthly_return_pct);
+      });
+
+      const body = years.map(yr => {
+        const r = byYear[yr];
+        const cf = cfByYear[yr] || 0;
+        const avgMonthlyRet = monthlyRetsByYear[yr]?.length ? monthlyRetsByYear[yr].reduce((a, b) => a + b, 0) / monthlyRetsByYear[yr].length : 0;
+        return `<tr>
+          <td><strong>${yr}</strong></td>
+          <td class="${cf >= 0 ? 'ret-pos' : 'ret-neg'}">${fmt(cf)}</td>
+          <td>${fmt(r.total_pv)}</td>
+          <td class="${cls(r.gain_total)}">${fmt(r.gain_total)}</td>
+          <td class="${r.returns_pct >= 0 ? 'ret-pos' : 'ret-neg'}">${fmtp(r.returns_pct)}</td>
+          <td class="${(r.monthly_xirr_pct || 0) >= 0 ? 'ret-pos' : 'ret-neg'}">${fmtp(r.monthly_xirr_pct)}</td>
+          <td>${fmtNav(r.nav)}</td>
+          <td class="${avgMonthlyRet >= 0 ? 'ret-pos' : 'ret-neg'}">${fmtp(Math.round(avgMonthlyRet * 100) / 100)}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('tblCombined').innerHTML = `<thead>${hdr}</thead><tbody>${body}</tbody>`;
+    }
+    // ═══════════════════════════════════════════════════════════════
+    //  COMBINED TRANCHE IRR (Overview)
+    // ═══════════════════════════════════════════════════════════════
+    function buildCombinedTrancheTable(active) {
+      const tbl = document.getElementById('tblTrancheOverview');
+      if (!tbl) return;
+
+      const aggregated = calcCombinedRows(active);
+      if (!aggregated.length) { tbl.innerHTML = ''; return; }
+
+      const lastRow = aggregated[aggregated.length - 1];
+      const navNow = lastRow.nav || 100;
+      const dateNow = lastRow.date;
+
+      // Build account contributions map for context labels (all cashflows)
+      const accContribByDate = {};
+      active.forEach(acc => {
+        acc.rows.forEach(r => {
+          const cf = r.cashflow || 0;
+          if (cf !== 0) {
+            const d = r.date.slice(0, 7);
+            if (!accContribByDate[d]) accContribByDate[d] = [];
+            accContribByDate[d].push({ name: acc.name, amount: cf });
+          }
+        });
+      });
+
+      const cashflowRows = aggregated.filter(r => (r.cashflow || 0) !== 0);
+      if (!cashflowRows.length) {
+        tbl.innerHTML = '<tr><td colspan="7" style="color:var(--muted);padding:16px;text-align:center;">No cashflows found.</td></tr>';
+        return;
+      }
+
+      // Same honest logic: Timing IRR = NAV growth rate from buy date
+      // No FIFO, no per-tranche ₹ gain (no trade data available)
+      const hdr = `<thead><tr>
+        <th>Month</th><th>Type</th><th>Amount</th><th>Accounts</th>
+        <th>NAV at Event</th><th>Holding</th>
+        <th title="How much the combined portfolio NAV grew since this date, annualised. Timing quality score across all accounts — NOT a P&amp;L.">Timing IRR &#9432;</th>
+      </tr></thead>`;
+
+      const fmt_nav = v => (v || 0).toFixed(2);
+      const rows = cashflowRows.map(r => {
+        const nav = r.nav || 100;
+        const cf = r.cashflow || 0;
+        const yearsDiff = (new Date(dateNow) - new Date(r.date)) / (365.25 * 24 * 3600 * 1000);
+        const months = Math.round(yearsDiff * 12);
+        const monthKey = r.date.slice(0, 7);
+        const contribs = accContribByDate[monthKey] || [];
+        const accNames = contribs.map(c => `${c.name} (${fmt(c.amount)})`).join(', ') || '—';
+
+        if (cf > 0) {
+          const irrAnnual = yearsDiff > 0 && nav > 0 ? (Math.pow(navNow / nav, 1 / yearsDiff) - 1) * 100 : 0;
+          const irrCls = irrAnnual >= 0 ? 'positive' : 'negative';
+          const navGrowth = nav > 0 ? ((navNow / nav - 1) * 100).toFixed(1) : '—';
+          return `<tr>
+            <td>${monthKey}</td>
+            <td><span style="color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.5px">INVEST</span></td>
+            <td>${fmt(cf)}</td>
+            <td style="font-size:11px;color:var(--muted)">${accNames}</td>
+            <td>${fmt_nav(nav)}</td>
+            <td>${months}m</td>
+            <td class="${irrCls}" title="Combined NAV grew ${navGrowth}% total since this deployment">
+              <strong>${fmtp(irrAnnual)}</strong>
+              <span style="font-size:9px;color:var(--muted);margin-left:4px">(${navGrowth}% total)</span>
+            </td>
+          </tr>`;
+        } else {
+          return `<tr style="opacity:0.65;background:rgba(255,180,0,.04)">
+            <td>${monthKey}</td>
+            <td><span style="color:#ffa94d;font-size:10px;font-weight:600;letter-spacing:.5px">REDEEM</span></td>
+            <td class="negative">${fmt(cf)}</td>
+            <td style="font-size:11px;color:var(--muted)">${accNames}</td>
+            <td>${fmt_nav(nav)}</td>
+            <td>${months}m</td>
+            <td style="color:var(--muted);font-size:11px">Combined NAV was ${fmt_nav(nav)} at exit</td>
+          </tr>`;
+        }
+      }).join('');
+
+      // Combined portfolio actual totals — computed from all active accounts
+      const totalInvested = active.reduce((s, a) => s + (a.analytics.final_total_invested || 0), 0);
+      const totalPV = active.reduce((s, a) => s + (a.analytics.final_total_pv || 0), 0);
+      const totalGain = active.reduce((s, a) => s + (a.analytics.final_gain_total || 0), 0);
+      const footerRow = `<tr style="background:rgba(108,99,255,.08);font-weight:700;font-size:12px;">
+        <td colspan="2">PORTFOLIO ACTUAL</td>
+        <td>${fmt(totalInvested)}</td>
+        <td style="color:var(--muted);font-size:10px;font-weight:400">Current PV: ${fmt(totalPV)}</td>
+        <td colspan="3">
+          <span class="${totalGain >= 0 ? 'positive' : 'negative'}">${fmt(totalGain)}</span>
+          <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:6px">total gain (all accounts)</span>
+        </td>
+      </tr>
+      <tr><td colspan="7" style="font-size:10px;color:var(--muted);padding:6px 10px;font-style:italic;">
+        ⓘ Timing IRR = combined portfolio NAV growth rate since each deployment date. Without trade-level data, per-tranche ₹ gain cannot be computed. Use this to assess which months you deployed capital at favourable portfolio valuations.
+      </td></tr>`;
+
+      tbl.innerHTML = hdr + '<tbody>' + rows + footerRow + '</tbody>';
+    }
+
+
+    function buildBenchmarks(active) {
+      if (!DATA.benchmarks || !DATA.benchmarks.length) return;
+      const aggregated = calcCombinedRows(active);
+      if (!aggregated.length) return;
+
+      const last = aggregated[aggregated.length - 1];
+      const combXIRR = last.monthly_xirr_pct || 0;
+      const combNAV = last.nav || 100;
+
+      const bmarks = DATA.benchmarks.map(b => ({ ...b }));
+      bmarks.unshift({ name: 'Your Portfolio (Combined)', cagr_pct: combXIRR, final_nav: combNAV });
+
+      const cols = [{ k: 'name', label: 'Benchmark Index' }, { k: 'cagr_pct', label: 'Equivalent Returns (CAGR / XIRR)' }, { k: 'final_nav', label: 'Final Value (Base 100 NAV)' }];
+      const hdr = cols.map(c => `<th>${c.label}</th>`).join('');
+      const body = bmarks.map((b, i) => {
+        const isPort = i === 0;
+        const rowStyle = isPort ? 'background:rgba(108,99,255,0.15); font-weight:700;' : '';
+        return `<tr style="${rowStyle}">
+           <td>${isPort ? '<span style="color:var(--accent)">' + b.name + '</span>' : b.name}</td>
+           <td class="${b.cagr_pct >= 0 ? 'ret-pos' : 'ret-neg'}">${fmtp(b.cagr_pct)}</td>
+           <td class="${b.final_nav >= 100 ? 'ret-pos' : 'ret-neg'}">${fmtNav(b.final_nav)}</td>
+         </tr>`;
+      }).join('');
+      document.getElementById('tblBenchmarks').innerHTML = `<thead><tr>${hdr}</tr></thead><tbody>${body}</tbody>`;
+    }
+
+
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ACCOUNT TABS CONTENT
+    // ═══════════════════════════════════════════════════════════════
+    function buildAccountTabs_content() {
+      DATA.accounts.forEach((acc, i) => {
+        const a = acc.analytics;
+        const start = new Date(a.start_date), end = new Date(a.end_date);
+        const years = (end - start) / (365.25 * 24 * 3600 * 1000);
+        const cagr = years > 0 ? (Math.pow(a.final_nav / 100, 1 / years) - 1) * 100 : 0;
+
+        document.getElementById(`kpiAcc${i}`).innerHTML = [
+          kpiCard('total_invested', 'Net Cashflow (Total Invested)', fmt(a.final_total_invested), a.num_months + ' months', 'neutral'),
+          kpiCard('pv', 'Current Value (PV)', fmt(a.final_total_pv), acc.name, 'neutral'),
+          kpiCard('gain_total', 'Total Gain', fmt(a.final_gain_total), fmtp(a.final_returns_pct) + ' returns', cls(a.final_gain_total)),
+          kpiCard('xirr', 'XIRR', fmtp(a.xirr_pct), 'annualised', cls(a.xirr_pct)),
+          kpiCard('nav', 'Performance (NAV)', fmtNav(a.final_nav), 'Annualised CAGR: ' + fmtp(cagr), 'neutral'),
+        ].join('');
+
+        // Point 5: compare annualised CAGR (NAV) vs XIRR
+        const xirr = a.xirr_pct || 0;
+        const diff = xirr - cagr;
+        let relText = "";
+        if (Math.abs(diff) < 2) relText = "Your cashflow timing had minimal impact — XIRR is in line with the underlying asset's annualised growth.";
+        else if (diff > 0) relText = "<span class='positive'>Your cashflow timing (e.g. buying dips/selling peaks) boosted your money-weighted return above the pure time-weighted NAV growth.</span>";
+        else relText = "<span class='negative'>Your cashflow timing dragged your money-weighted return below the underlying asset's annualised NAV growth.</span>";
+
+        const insightHTML = `<div style="background:var(--glass); border-left:4px solid ${diff > 0 ? 'var(--green)' : diff < -2 ? 'var(--red)' : 'var(--muted)'}; padding:14px; font-size:12px; margin-bottom:18px; border-radius:4px; line-height:1.5;">
+          <strong>NAV vs XIRR Relation:</strong> Annualised NAV growth (CAGR) is <strong>${fmtp(cagr)}</strong>, while money-weighted return (XIRR) is <strong>${fmtp(xirr)}</strong>.<br>
+          <span style="color:var(--muted)">${relText}</span></div>`;
+        document.getElementById(`chartAcc${i}`).parentElement.insertAdjacentHTML('afterend', insightHTML);
+
+        chartInstances[`chartAcc${i}`] = new Chart(document.getElementById(`chartAcc${i}`), {
+          type: 'line',
+          data: {
+            labels: acc.rows.map(r => r.date.slice(0, 7)),
+            datasets: [
+              { label: 'Portfolio Value (₹)', data: acc.rows.map(r => r.total_pv), borderColor: PALETTE[i % PALETTE.length], backgroundColor: pa(i % PALETTE.length, .12), fill: true, tension: .4, yAxisID: 'y', pointRadius: 4, pointHoverRadius: 6 },
+              { label: 'NAV (base 100)', data: acc.rows.map(r => r.nav), borderColor: '#00d4aa', backgroundColor: 'transparent', fill: false, tension: .4, borderDash: [5, 3], yAxisID: 'y2', pointRadius: 3, pointHoverRadius: 5 },
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { position: 'top' },
+              tooltip: { callbacks: { label: c => c.datasetIndex === 0 ? ` ${c.dataset.label}: ${fmt(c.raw)}` : ` ${c.dataset.label}: ${fmtNav(c.raw)}` } }
+            },
+            scales: {
+              x: { grid: { color: gridColor } },
+              y: { grid: { color: gridColor }, position: 'left', ticks: { callback: v => fmt(v) } },
+              y2: { grid: { display: false }, position: 'right', ticks: { callback: v => v.toFixed(1) }, title: { display: true, text: 'NAV', color: '#00d4aa', font: { size: 10 } } },
+            }
+          }
+        });
+
+        // Separate Returns % chart — capped at ±40% — uses monthly_return_pct (period-over-period)
+        const retValsAcc = acc.rows.map(r => r.monthly_return_pct || 0).filter(v => Math.abs(v) < 90);
+        const retMaxAcc = Math.min(40, Math.max(...retValsAcc, 5));
+        const retMinAcc = Math.max(-40, Math.min(...retValsAcc, -5));
+        chartInstances[`chartAccRet${i}`] = new Chart(document.getElementById(`chartAccRet${i}`), {
+          type: 'bar',
+          data: {
+            labels: acc.rows.map(r => r.date.slice(0, 7)),
+            datasets: [{
+              label: 'Monthly Return %',
+              data: acc.rows.map(r => r.monthly_return_pct),
+              backgroundColor: acc.rows.map(r => (r.monthly_return_pct || 0) >= 0 ? pa(i % PALETTE.length, .75) : 'rgba(255,79,94,.65)'),
+              borderColor: acc.rows.map(r => (r.monthly_return_pct || 0) >= 0 ? PALETTE[i % PALETTE.length] : '#ff4f5e'),
+              borderWidth: 1, borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { position: 'top' },
+              tooltip: {
+                callbacks: {
+                  title: items => items[0].label,
+                  label: c => {
+                    const r = acc.rows[c.dataIndex];
+                    const gainLoss = r ? fmt(r.total_pv - (acc.rows[c.dataIndex - 1]?.total_pv || r.total_pv)) : '';
+                    const cf = r && r.cashflow ? ` | Cashflow: ${fmt(r.cashflow)}` : '';
+                    const pv = r ? ` | Portfolio: ${fmt(r.total_pv)}` : '';
+                    return [
+                      ` Return: ${fmtp(c.raw)}`,
+                      gainLoss ? ` ₹ Change: ${gainLoss}` : '',
+                      pv, cf
+                    ].filter(Boolean);
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { grid: { color: gridColor } },
+              y: { grid: { color: gridColor }, suggestedMin: retMinAcc, suggestedMax: retMaxAcc, ticks: { callback: v => v + '%' } }
+            }
+          }
+        });
+
+        buildTrancheTable(acc, `tblTranche${i}`);
+        buildAccountTable(i, acc.rows);
+      });
+    }
+
+    function buildAccountTable(i, rows) {
+      const cols = [
+        { k: 'date', label: 'Date(YYYY-MM-DD)' }, { k: 'cashflow', label: 'Net Cashflow', tip: true }, { k: 'free_cash', label: 'Free Cash', tip: true },
+        { k: 'invested', label: 'Current Invested Value', tip: true }, { k: 'pv', label: 'PV', tip: true },
+        { k: 'total_invested', label: 'Total Cashflow', tip: true }, { k: 'total_pv', label: 'Total PV', tip: true },
+        { k: 'gain_unrealised', label: 'Gain Unreal.', tip: true }, { k: 'gain_realised', label: 'Gain Real.', tip: true },
+        { k: 'gain_total', label: 'Gain Total', tip: true }, { k: 'returns_pct', label: 'Returns %', tip: true },
+        { k: 'monthly_xirr_pct', label: 'Monthly XIRR', tip: true }, { k: 'nav', label: 'NAV', tip: true },
+      ];
+      const hdr = cols.map(c => `<th>${c.tip ? tip(c.k, c.label) : c.label}</th>`).join('') + `<th></th>`;
+
+      const body = rows.map((r, ri) => {
+        const retC = r.returns_pct >= 0 ? 'ret-pos' : 'ret-neg';
+        return `<tr id="erow-${i}-${ri}">
+      <td><input class="edit-input date-input" data-acc="${i}" data-field="date" value="${r.date}"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="cashflow" value="${fmtInput(fmtRaw(r.cashflow))}"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="free_cash" value="${fmtInput(fmtRaw(r.free_cash))}"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="invested" value="${fmtInput(fmtRaw(r.invested))}"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="pv" value="${fmtInput(fmtRaw(r.pv))}"></td>
+      <td>${fmt(r.total_invested)}</td><td>${fmt(r.total_pv)}</td>
+      <td class="${r.gain_unrealised >= 0 ? 'ret-pos' : 'ret-neg'}">${fmt(r.gain_unrealised)}</td>
+      <td class="${r.gain_realised >= 0 ? 'ret-pos' : 'ret-neg'}">${fmt(r.gain_realised)}</td>
+      <td class="${r.gain_total >= 0 ? 'ret-pos' : 'ret-neg'}">${fmt(r.gain_total)}</td>
+      <td class="${retC}">${fmtp(r.returns_pct)}</td>
+      <td class="${r.monthly_xirr_pct == null ? '' : r.monthly_xirr_pct >= 0 ? 'ret-pos' : 'ret-neg'}">${r.monthly_xirr_pct != null ? fmtp(r.monthly_xirr_pct) : '—'}</td>
+      <td class="neutral">${fmtNav(r.nav)}</td>
+      <td><button class="delete-row-btn" onclick="deleteEditRow(${i},${ri})" title="Delete Row">✕</button></td>
+    </tr>`;
+      }).join('');
+      document.getElementById(`tblAcc${i}`).innerHTML = `<thead><tr>${hdr}</tr></thead><tbody id="editTbody${i}">${body}</tbody>`;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  EDITOR
+    // ═══════════════════════════════════════════════════════════════
+    function addEditRow(i) {
+      const tbody = document.getElementById(`editTbody${i}`);
+      const ri = tbody.rows.length;
+      // If we have previous rows, auto-fill the date with something close (next month)
+      let prevDateStr = "";
+      if (ri > 0) {
+        let lastRow = DATA.accounts[i].rows[ri - 1];
+        if (lastRow && lastRow.date) {
+          let d = new Date(lastRow.date);
+          d.setMonth(d.getMonth() + 1);
+          prevDateStr = d.toISOString().split('T')[0];
+        }
+      }
+      const tr = document.createElement('tr');
+      tr.id = `erow-${i}-${ri}`;
+      tr.innerHTML = `
+      <td><input class="edit-input date-input" data-acc="${i}" data-field="date" value="${prevDateStr}" placeholder="YYYY-MM-DD"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="cashflow" value="0"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="free_cash" value="0"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="invested" value="0"></td>
+      <td><input class="edit-input num-input" data-acc="${i}" data-field="pv" value="0"></td>
+      <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+      <td><button class="delete-row-btn" onclick="deleteEditRow(${i},${ri})" title="Delete Row">✕</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    function deleteEditRow(i, ri) {
+      const row = document.getElementById(`erow-${i}-${ri}`);
+      if (row) row.remove();
+    }
+
+    function getEditedRawRows(i) {
+      const tbody = document.getElementById(`editTbody${i}`);
+      const rows = [];
+      for (const tr of tbody.rows) {
+        const inputs = tr.querySelectorAll('.edit-input');
+        if (!inputs.length) continue;
+        const obj = {};
+        inputs.forEach(inp => { obj[inp.dataset.field] = inp.value; });
+        if (!obj.date) continue; // skip empty dates
+
+        // Attempt preserving existing monthly XIRR and epoch
+        let existingMatch = null;
+        if (DATA.accounts[i].rows) {
+          existingMatch = DATA.accounts[i].rows.find(x => x.date === obj.date);
+        }
+
+        rows.push({
+          date: obj.date,
+          epoch_ms: existingMatch ? existingMatch.epoch_ms : new Date(obj.date).getTime(),
+          cashflow: parseNum(obj.cashflow),
+          free_cash: parseNum(obj.free_cash),
+          invested: parseNum(obj.invested),
+          pv: parseNum(obj.pv),
+          monthly_xirr_pct: existingMatch ? existingMatch.monthly_xirr_pct : null
+        });
+      }
+      return rows.sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    async function saveEdits(i) {
+      const statusEl = document.getElementById(`saveStatus${i}`);
+      statusEl.textContent = 'Saving…';
+      const rawRows = getEditedRawRows(i);
+      const derived = recalcRows(rawRows);
+      DATA.accounts[i].rows = derived;
+      DATA.generated_at = new Date().toLocaleString('en-IN');
+
+      const rows = derived;
+      if (rows.length) {
+        const last = rows[rows.length - 1], returns = rows.map(r => r.returns_pct);
+        DATA.accounts[i].analytics.final_total_invested = last.total_invested;
+        DATA.accounts[i].analytics.final_total_pv = last.total_pv;
+        DATA.accounts[i].analytics.final_gain_total = last.gain_total;
+        DATA.accounts[i].analytics.final_returns_pct = last.returns_pct;
+        DATA.accounts[i].analytics.final_nav = last.nav;
+        DATA.accounts[i].analytics.num_months = rows.length;
+        const bIdx = returns.indexOf(Math.max(...returns)), wIdx = returns.indexOf(Math.min(...returns));
+        DATA.accounts[i].analytics.best_month = { date: rows[bIdx].date, returns_pct: returns[bIdx], gain_total: rows[bIdx].gain_total };
+        DATA.accounts[i].analytics.worst_month = { date: rows[wIdx].date, returns_pct: returns[wIdx], gain_total: rows[wIdx].gain_total };
+      }
+
+      saveToCache();
+      setTimeout(() => {
+        statusEl.textContent = '✓ Saved Locally'; statusEl.style.color = 'var(--green)';
+        const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+        init(); switchTab(activeTab);
+      }, 300);
+
+      setTimeout(() => { statusEl.textContent = ''; }, 4000);
+      renderOverview();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  INSIGHTS TAB
+    // ═══════════════════════════════════════════════════════════════
+    function buildInsights() {
+      document.getElementById('insightsGrid').innerHTML = DATA.insights.map(t => `<div class="insight-card">${t}</div>`).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  EXCEL EXPORT (SheetJS)
+    // ═══════════════════════════════════════════════════════════════
+    function exportExcel() {
+      if (!window.XLSX) { alert('SheetJS not loaded'); return; }
+      const wb = XLSX.utils.book_new();
+
+      // 0. README / Instructions Sheet
+      const readmeData = [
+        ["PORTFOLIO ANALYZER - EXPORTED DATA"],
+        ["Generated on:", new Date().toLocaleString()],
+        [""],
+        ["HOW TO USE THIS FILE:"],
+        ["1. This file is 100% compatible with the Portfolio Analyzer tool."],
+        ["2. You can import this file back into the tool at any time."],
+        ["3. The sheets named after your accounts contain the raw data."],
+        ["4. Columns marked [INPUT] are the only ones you should edit manually."],
+        ["5. Columns marked [CALC] are generated by the tool for your reference."],
+        [""],
+        ["COLUMN GUIDE:"],
+        ["[INPUT] Date", "YYYY-MM-DD format (mandatory)"],
+        ["[INPUT] Cashflow", "Amount invested (+) or withdrawn (-) in that specific month"],
+        ["[INPUT] Free Cash", "Idle cash sitting in the account for that month"],
+        ["[INPUT] Invested", "The book value (cost basis) of your holdings"],
+        ["[INPUT] PV", "The current Market Value of your holdings"],
+        [""],
+        ["[CALC] Total Invested", "Cumulative net cashflow injected into the account"],
+        ["[CALC] Total PV", "Current Market Value + Free Cash"],
+        ["[CALC] Gain Total", "Total profit (Realised + Unrealised)"],
+        ["[CALC] XIRR %", "Annualised internal rate of return for that account"],
+        ["[CALC] NAV", "Mutual-Fund style progression (starts at 100)"]
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(readmeData), 'README');
+
+      // 1. Per-account sheets
+      const activeSel = DATA.accounts.filter(a => activeAccounts.has(a.name));
+      activeSel.forEach(acc => {
+        const headers = [
+          '[INPUT] Date', '[INPUT] Cashflow', '[INPUT] Free Cash', '[INPUT] Invested', '[INPUT] PV',
+          '[CALC] Total Invested', '[CALC] Total PV', '[CALC] Gain Unrealised', '[CALC] Gain Realised',
+          '[CALC] Gain Total', '[CALC] Returns %', '[CALC] Monthly XIRR %', '[CALC] NAV'
+        ];
+        const data = [headers, ...acc.rows.map(r => [
+          r.date, r.cashflow, r.free_cash, r.invested, r.pv,
+          r.total_invested, r.total_pv, r.gain_unrealised, r.gain_realised,
+          r.gain_total, (r.returns_pct || 0).toFixed(2) + '%',
+          r.monthly_xirr_pct !== null ? (r.monthly_xirr_pct).toFixed(2) + '%' : '—',
+          (r.nav || 0).toFixed(2)
+        ])];
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), acc.name);
+      });
+
+      // 2. Summary table sheet
+      if (activeSel.length > 0) {
+        const aggregated = calcCombinedRows(activeSel);
+        const sumHdr = ['Date', 'Cashflow', 'Free Cash', 'Invested', 'PV', 'Total Invested', 'Total PV',
+          'Gain Unrealised', 'Gain Realised', 'Gain Total', 'Returns %', 'NAV'];
+        const sumRows = aggregated.map(r => [
+          r.date, r.cashflow, r.free_cash, r.invested, r.pv,
+          r.total_invested, r.total_pv, r.gain_unrealised, r.gain_realised,
+          r.gain_total, (r.returns_pct || 0).toFixed(2) + '%', (r.nav || 0).toFixed(2)
+        ]);
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([sumHdr, ...sumRows]), 'Combined Summary');
+      }
+
+      XLSX.writeFile(wb, `portfolio_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  TAB SWITCHING
+    // ═══════════════════════════════════════════════════════════════
+    function switchTab(name) {
+      document.querySelectorAll('[id^="content-"]').forEach(el => el.style.display = 'none');
+      const el = document.getElementById(`content-${name}`);
+      if (el) el.style.display = '';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  BOOT
+    // ═══════════════════════════════════════════════════════════════
+    // Initialization is handled by window.load event listener above
+  </script>
+</body>
+
+</html>
