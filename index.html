@@ -191,7 +191,12 @@
       font-weight: 600;
       cursor: pointer;
       transition: all .2s;
-      opacity: .45
+      opacity: .45;
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0
     }
 
     .acc-toggle.on {
@@ -202,7 +207,14 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      display: inline-block
+      display: inline-block;
+      flex-shrink: 0
+    }
+
+    .acc-toggle-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
     }
 
     /* KPI GRID */
@@ -533,7 +545,28 @@
       line-height: 1.3;
       cursor: default;
       position: relative;
-      transition: transform 0.15s;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-link:hover {
+      background: rgba(108, 99, 255, 0.1);
+      text-decoration: underline;
     }
 
     .corr-cell:hover {
@@ -834,6 +867,427 @@
         font-size: 18px
       }
     }
+
+    /* COLLAPSIBLE SECTIONS */
+    .section-header {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 6px 0;
+      border-radius: 8px;
+      transition: color .2s
+    }
+
+    .section-header:hover {
+      color: var(--text)
+    }
+
+    .section-header .sh-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    .section-header .sh-chevron {
+      font-size: 10px;
+      transition: transform .25s;
+      opacity: .6
+    }
+
+    .section-header.collapsed .sh-chevron {
+      transform: rotate(-90deg)
+    }
+
+    .section-content {
+      transition: none
+    }
+
+    .section-content.collapsed {
+      display: none !important
+    }
+
+    /* NAV PERIOD RETURNS */
+    .nav-returns-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border)
+    }
+
+    .nav-ret-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      min-width: 72px;
+      transition: all .2s
+    }
+
+    .nav-ret-pill:hover {
+      background: var(--glass-h);
+      transform: translateY(-2px)
+    }
+
+    .nav-ret-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted)
+    }
+
+    .nav-ret-val {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1
+    }
+
+    .nav-ret-pill.positive {
+      border-color: rgba(33, 208, 122, .3);
+      background: rgba(33, 208, 122, .06)
+    }
+
+    .nav-ret-pill.negative {
+      border-color: rgba(255, 79, 94, .3);
+      background: rgba(255, 79, 94, .06)
+    }
+
+    .nav-ret-pill.neutral {
+      border-color: rgba(108, 99, 255, .3);
+      background: rgba(108, 99, 255, .06)
+    }
+
+    /* TRANCHE CARDS */
+    .tranche-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+      padding: 14px
+    }
+
+    .tranche-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      position: relative;
+      transition: all .2s
+    }
+
+    .tranche-card:hover {
+      background: var(--glass-h);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .25)
+    }
+
+    .tranche-card.redeem {
+      opacity: .75;
+      background: rgba(255, 180, 0, .03);
+      border-color: rgba(255, 180, 0, .15)
+    }
+
+    .tranche-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px
+    }
+
+    .tranche-month {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted)
+    }
+
+    .tranche-type-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 2px 8px;
+      border-radius: 999px
+    }
+
+    .tranche-type-invest {
+      background: rgba(108, 99, 255, .2);
+      color: var(--accent)
+    }
+
+    .tranche-type-redeem {
+      background: rgba(255, 169, 77, .2);
+      color: #ffa94d
+    }
+
+    .tranche-amount {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px
+    }
+
+    .tranche-nav-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px
+    }
+
+    .tranche-nav-arrow {
+      color: var(--accent);
+      font-size: 12px
+    }
+
+    .tranche-irr {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1
+    }
+
+    .tranche-irr-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .tranche-holding {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    .tranche-nav-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, .08);
+      border-radius: 999px;
+      margin-top: 10px;
+      overflow: hidden
+    }
+
+    .tranche-nav-bar-fill {
+      height: 100%;
+      border-radius: 999px
+    }
+
+    .tranche-footer {
+      background: rgba(108, 99, 255, .08);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin: 0 14px 14px;
+      font-size: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center
+    }
+
+    .tranche-footer strong {
+      color: var(--text)
+    }
+
+    /* NAV RETURNS COMPARISON TABLE */
+    .nav-compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 6px
+    }
+
+    .nav-compare-table th {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      padding: 6px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .nav-compare-table th:first-child {
+      text-align: left
+    }
+
+    .nav-compare-table td {
+      padding: 7px 10px;
+      text-align: right;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      font-size: 11px
+    }
+
+    .nav-compare-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .nav-compare-table tr:last-child td {
+      border-bottom: none
+    }
+
+    .nav-compare-table tr.combined-row td {
+      background: rgba(108, 99, 255, .08);
+      font-weight: 700;
+      border-top: 1px solid rgba(108, 99, 255, .2)
+    }
+
+    .nav-compare-table .ret-na {
+      color: var(--muted);
+      font-size: 10px
+    }
+
+    /* TRANCHE HEATMAP */
+    .tranche-heatmap {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 5px;
+      padding: 14px
+    }
+
+    .tranche-cell {
+      aspect-ratio: 1 / 1.1;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: default;
+      transition: transform .15s, box-shadow .15s;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid transparent
+    }
+
+    .tranche-cell:hover {
+      transform: scale(1.06);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+      z-index: 2
+    }
+
+    .tranche-cell-date {
+      font-size: 8px;
+      font-weight: 600;
+      opacity: .7;
+      letter-spacing: .04em
+    }
+
+    .tranche-cell-irr {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .tranche-cell-amt {
+      font-size: 8px;
+      opacity: .7;
+      margin-top: 1px
+    }
+
+    .tranche-cell-type {
+      font-size: 6px;
+      letter-spacing: .07em;
+      font-weight: 700;
+      opacity: .8;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    .tranche-cell.redeem-cell {
+      background: rgba(255, 180, 0, .08) !important;
+      border-color: rgba(255, 180, 0, .2) !important;
+      color: #ffa94d
+    }
+
+    /* BENCHMARK PERIOD RETURNS TABLE */
+    .bmark-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px
+    }
+
+    .bmark-table th {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--muted);
+      padding: 6px 10px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap
+    }
+
+    .bmark-table th:first-child {
+      text-align: left
+    }
+
+    .bmark-table td {
+      padding: 7px 10px;
+      text-align: right;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      white-space: nowrap
+    }
+
+    .bmark-table td:first-child {
+      text-align: left;
+      font-weight: 600
+    }
+
+    .bmark-table tr.your-portfolio td {
+      background: rgba(108, 99, 255, .1);
+      font-weight: 700
+    }
+
+    .bmark-table tr:last-child td {
+      border-bottom: none
+    }
+
+    .bmark-table .ret-na {
+      color: var(--muted);
+      font-size: 10px
+    }
+
+    /* CHART TOOLBAR */
+    .chart-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .chart-toggle-btn {
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: inherit
+    }
+
+    .chart-toggle-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600
+    }
   </style>
 </head>
 
@@ -948,25 +1402,54 @@
       <div class="account-toggles" id="accToggles"></div>
       <div class="kpi-grid" id="kpiGrid"></div>
 
-      <!-- PORTFOLIO CONCENTRATION DONUT - only shown for 2+ accounts -->
+      <!-- ALLOCATION & PERFORMANCE - shown for 2+ accounts -->
+      <!-- Updated Side-by-Side Allocation & Performance -->
       <div id="concentrationSection" style="display:none;margin-bottom:18px;">
-        <div class="chart-card">
-          <div class="chart-title">Portfolio Concentration
-            <div class="badge">allocation by current value</div>
-            <span class="chart-info-tip"
-              title="Shows what % of your total portfolio value is held in each account. Highly concentrated = single-account risk. Aim for balance unless one account performance dominates.">&#9432;</span>
+        <div class="chart-grid chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-title">Portfolio Allocation
+              <div class="badge">by current value</div>
+              <span class="chart-info-tip"
+                title="Current allocation donut by total portfolio value (holdings + cash).">&#9432;</span>
+            </div>
+            <div class="conc-layout">
+              <div class="conc-chart-wrap"><canvas id="chartConcentration"></canvas></div>
+              <div class="conc-legend" id="concLegend"></div>
+            </div>
           </div>
-          <div class="conc-layout">
-            <div class="conc-chart-wrap"><canvas id="chartConcentration"></canvas></div>
-            <div class="conc-legend" id="concLegend"></div>
+          <div class="chart-card">
+            <div class="chart-title">Performance Matrix
+              <div class="badge">NAV-based returns</div>
+              <span class="chart-info-tip"
+                title="Time-weighted returns for each account across standard windows (1M–Inception). Pure performance benchmarking.">&#9432;</span>
+            </div>
+            <div id="navReturnsGrid" style="margin-top:10px"></div>
           </div>
         </div>
       </div>
+
+      <!-- Performance for single account view -->
+      <div id="navReturnsSection" style="display:none;margin-bottom:18px;">
+        <div class="chart-card">
+          <div class="chart-title">Performance &amp; Returns
+            <div class="badge">NAV-based time-weighted</div>
+            <span class="chart-info-tip"
+              title="Time-weighted returns. Pure NAV growth — unaffected by cashflow timing.">&#9432;</span>
+          </div>
+          <div id="navReturnsSingleGrid"></div>
+        </div>
+      </div>
+
       <div class="section-title">Portfolio Value Over Time <span></span></div>
       <div class="chart-card" style="margin-bottom:18px">
-        <div class="chart-title">Combined &amp; Per-Account Value <div class="badge">Total PV</div>
-          <span class="chart-info-tip"
-            title="Shows how the total portfolio value (current investments + free cash) has changed over time for each account. Use this to see growth trajectory and compare account sizes. A rising line = wealth being built.">&#9432;</span>
+        <div class="chart-title" style="justify-content:space-between">
+          <div class="chart-toolbar">
+            Combined &amp; Per-Account Value <div class="badge">Total PV</div>
+            <span class="chart-info-tip"
+              title="Shows how the total portfolio value has changed over time for each account. Toggle 'Show Invested' to overlay the current invested (market value of holdings) as a dashed line.">&#9432;</span>
+          </div>
+          <button class="chart-toggle-btn" id="btnShowInvested" onclick="toggleInvestedLines()">📊 Show
+            Invested</button>
         </div>
         <canvas id="chartPV"></canvas>
       </div>
@@ -978,86 +1461,90 @@
         </div>
         <canvas id="chartNAV" style="min-height:300px"></canvas>
       </div>
-
-      <div class="chart-grid chart-grid-2">
-        <div class="chart-card">
-          <div class="chart-title">XIRR Progression <div class="badge">annualised %</div>
-            <span class="chart-info-tip"
-              title="Running XIRR — the annualised money-weighted return as of each month, considering all your actual cashflows. Higher = better. Watch for the trend: a rising XIRR means recent performance is improving the overall rate. Compare to FD rate (7%) to know if you're beating risk-free returns.">&#9432;</span>
-          </div>
-          <canvas id="chartXIRR"></canvas>
+      <!-- XIRR Progression — FULL WIDTH -->
+      <div class="chart-card" style="margin-bottom:18px">
+        <div class="chart-title">XIRR Progression <div class="badge">annualised %</div>
+          <span class="chart-info-tip"
+            title="Running XIRR — the annualised money-weighted return as of each month, considering all your actual cashflows. Higher = better. Watch for the trend: a rising XIRR means recent performance is improving the overall rate. Compare to FD rate (7%) to know if you're beating risk-free returns.">&#9432;</span>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">Monthly Returns % <div class="badge">period-over-period</div>
-            <span class="chart-info-tip"
-              title="How much your portfolio actually gained or lost each month (period-over-period, not cumulative). Green = gain that month, red = loss that month. Use this to find significant months where your actions (investments, withdrawals) or market events had a visible impact. Tall bars = high-impact months.">&#9432;</span>
-          </div>
-          <canvas id="chartReturns" style="min-height:280px"></canvas>
-        </div>
+        <canvas id="chartXIRR" style="min-height:260px"></canvas>
       </div>
 
+      <!-- Monthly Returns + Gain Composition — SIDE BY SIDE -->
       <div class="chart-grid chart-grid-2">
         <div class="chart-card">
-          <div class="chart-title">Invested vs Portfolio Value <div class="badge">capital deployed</div>
+          <div class="chart-title">Monthly Returns % <div class="badge">aggregate period-over-period</div>
             <span class="chart-info-tip"
-              title="Solid line = actual current portfolio value. Dashed line = net money you've put in. The gap between them is your gain (or loss). When value line is above invested line, you're in profit. Use this to see how quickly your portfolio grew relative to your contributions.">&#9432;</span>
+              title="How much the combined portfolio gained or lost each month. Green = gain, red = loss. Shows aggregate data for all active accounts together.">&#9432;</span>
           </div>
-          <canvas id="chartCashflow"></canvas>
+          <canvas id="chartReturns" style="min-height:280px"></canvas>
         </div>
         <div class="chart-card">
           <div class="chart-title">Gain Composition <div class="badge">Unrealised + Realised stacked</div>
             <span class="chart-info-tip"
-              title="Each bar shows total gain broken into: Unrealised (still in the investment, could go up or down) and Realised (already pocketed from redemptions/dividends). Use this to understand how much of your profit is locked vs liquid. Negative bars = booked losses or early-stage investing.">&#9432;</span>
+              title="Each bar shows total gain broken into: Unrealised (still in the investment) and Realised (already pocketed). Shows aggregate data for all active accounts combined. Negative bars = booked losses or early-stage investing.">&#9432;</span>
           </div>
           <canvas id="chartGains" style="min-height:220px"></canvas>
         </div>
       </div>
-      <div class="section-title">Account Summary <span></span></div>
-      <div class="compare-grid" id="compareGrid"></div>
 
-      <!-- CORRELATION MATRIX (only visible for 2+ accounts) -->
+      <!-- ACCOUNT SUMMARY (collapsible) -->
+      <div class="section-header" onclick="toggleSection('sectionCompare', this)">
+        Account Summary <span class="sh-line"></span><span class="sh-chevron">▼</span>
+      </div>
+      <div class="section-content" id="sectionCompare">
+        <div class="compare-grid" id="compareGrid"></div>
+      </div>
+
+      <!-- CORRELATION MATRIX (only visible for 2+ accounts, collapsible) -->
       <div id="correlationSection" style="display:none">
-        <div class="section-title">Account Correlation Matrix
+        <div class="section-header" onclick="toggleSection('sectionCorr', this)">
+          Account Correlation Matrix
           <span class="chart-info-tip"
             style="font-size:13px; color:var(--muted); margin-left:6px; cursor:help; opacity:0.7;"
-            title="Pearson correlation of monthly returns between each pair of accounts. +1.0 = perfect lockstep, 0 = uncorrelated, -1.0 = opposite. High correlation = false diversification (both fall together in a downturn). Target: pairs below 0.5 for genuine diversification.">&#9432;</span>
+            title="Pearson correlation of monthly returns between each pair of accounts. +1.0 = perfect lockstep, 0 = uncorrelated, -1.0 = opposite.">&#9432;</span>
+          <span class="sh-line"></span><span class="sh-chevron">▼</span>
         </div>
-        <div class="corr-wrap" id="corrWrap"></div>
-      </div>
-
-      <!-- COMBINED TRANCHE IRR -->
-      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;align-items:center;gap:8px">
-          IRR per Investment Tranche (Combined)
-          <span class="chart-info-tip"
-            title="For every month across all active accounts where new money was added, this shows the annualised return on that combined cashflow tranche — computed using the combined portfolio NAV. Negative = that tranche is underwater. Lets you see which months you deployed capital effectively across your whole portfolio.">&#9432;</span>
-        </div>
-      </div>
-      <div class="chart-card" style="margin-bottom:18px; padding:0; overflow:hidden;">
-        <div class="table-scroll">
-          <table class="tranche-table" id="tblTrancheOverview"></table>
+        <div class="section-content" id="sectionCorr">
+          <div class="corr-wrap" id="corrWrap"></div>
         </div>
       </div>
 
-      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <div>Global Market Benchmarking <span></span></div>
+      <!-- COMBINED TRANCHE IRR (collapsible) -->
+      <div class="section-header" onclick="toggleSection('sectionTranche', this)" style="margin-top:8px;">
+        IRR per Investment Tranche (Combined)
+        <span class="chart-info-tip"
+          title="For every month across all active accounts where new money was added, this shows the annualised return on that combined cashflow tranche — computed using the combined portfolio NAV. Negative = that tranche is underwater.">&#9432;</span>
+        <span class="sh-line"></span><span class="sh-chevron">▼</span>
       </div>
-      <div class="table-wrap">
-        <div class="table-scroll">
-          <table id="tblBenchmarks"></table>
+      <div class="section-content" id="sectionTranche">
+        <div class="chart-card" style="margin-bottom:18px; padding:0; overflow:hidden;">
+          <div id="trancheCardsOverview"></div>
         </div>
       </div>
 
-      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <div>Combined Monthly Data <span></span></div>
-        <div class="table-toggle-wrap">
+      <!-- GLOBAL BENCHMARKS (collapsible) -->
+      <div class="section-header" onclick="toggleSection('sectionBenchmarks', this)">
+        Global Market Benchmarking <span class="sh-line"></span><span class="sh-chevron">▼</span>
+      </div>
+      <div class="section-content" id="sectionBenchmarks">
+        <div id="benchmarkList"></div>
+      </div>
+
+      <!-- DETAILED INVESTMENT DATA (collapsible) -->
+      <div class="section-header" onclick="toggleSection('sectionMonthly', this)" style="margin-top:8px;">
+        Detailed Investment Data
+        <div class="table-toggle-wrap" onclick="event.stopPropagation()">
           <button class="table-toggle-btn active" id="btnMonthly" onclick="setTableView('monthly')">Monthly</button>
           <button class="table-toggle-btn" id="btnAnnual" onclick="setTableView('annual')">Annual</button>
         </div>
+        <span class="sh-line"></span><span class="sh-chevron">▼</span>
       </div>
-      <div class="table-wrap">
-        <div class="table-scroll">
-          <table id="tblCombined"></table>
+      <div class="section-content" id="sectionMonthly">
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table id="tblCombined"></table>
+          </div>
         </div>
       </div>
 
@@ -1083,7 +1570,7 @@
     Chart.defaults.color = '#8891b0'; Chart.defaults.font.family = "'Inter',sans-serif"; Chart.defaults.font.size = 11;
     const baseScales = { x: { grid: { color: gridColor }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: gridColor } } };
 
-    const fmt = v => v == null ? '—' : '₹' + Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    const fmt = v => (v == null || isNaN(v)) ? '—' : '₹' + Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 });
     const fmtRaw = v => v == null ? '' : Number(v);
     const fmtp = v => v == null ? '—' : (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%';
     const fmtNav = v => v == null ? '—' : Number(v).toFixed(2);
@@ -1094,6 +1581,7 @@
       cashflow: "Money deposited into (positive) or withdrawn from (negative) the account this period.",
       free_cash: "Uninvested cash sitting idle in the account — not yet deployed into securities.",
       invested: "Snapshot: current market value of invested positions, excluding free cash.",
+      invested_cost: "Current cost basis of the invested positions (original buy value).",
       pv: "Portfolio Value = Invested + Free Cash at this snapshot date.",
       total_invested: "Cumulative sum of all cashflows into the account up to this date.",
       total_pv: "Total Portfolio Value = PV + Free Cash (running).",
@@ -1252,7 +1740,10 @@
       return {
         name, xirr_pct,
         start_date: rows[0].date, end_date: last.date, num_months: rows.length,
-        final_total_invested: last.total_invested, final_pv: last.pv, final_total_pv: last.total_pv,
+        final_total_invested: last.total_invested || 0,
+        final_invested_cost: last.invested || 0,
+        final_free_cash: last.free_cash || 0,
+        final_pv: last.pv || 0, final_total_pv: last.total_pv || 0,
         final_gain_total: last.gain_total, final_gain_unrealised: last.gain_unrealised, final_gain_realised: last.gain_realised,
         final_returns_pct: last.returns_pct, final_nav: last.nav,
         best_month: { date: bestRow ? bestRow.date : rows[0].date, monthly_return_pct: periodicReturns[bestIdx] || 0, gain_total: bestRow ? bestRow.gain_total : 0 },
@@ -1306,7 +1797,19 @@
       if (activeAll.length) {
         const aggregated = calcCombinedRows(activeAll);
         const last = aggregated[aggregated.length - 1];
-        DATA.combined = { rows: aggregated, final_total_invested: last.total_invested, final_total_pv: last.total_pv, final_total_gain: last.gain_total, final_returns_pct: last.returns_pct, final_nav: last.nav, total_months_tracked: aggregated.length };
+        DATA.combined = {
+          rows: aggregated,
+          final_total_invested: last.total_invested || 0,
+          final_invested_cost: last.invested || 0,
+          final_free_cash: last.free_cash || 0,
+          final_total_pv: last.total_pv || 0,
+          final_total_gain: last.gain_total || 0,
+          final_gain_realised: last.gain_realised || 0,
+          final_gain_unrealised: last.gain_unrealised || 0,
+          final_returns_pct: last.returns_pct || 0,
+          final_nav: last.nav || 100,
+          total_months_tracked: aggregated.length
+        };
         recomputeBenchmarks(aggregated);
       } else { DATA.combined = null; DATA.benchmarks = []; }
       generateInsightsText();
@@ -1385,6 +1888,20 @@
     // ═══════════════════════════════════════════════════════════════
     let DATA = null;
     let activeAccounts = new Set();
+
+    function selectAllAccounts(all) {
+      if (all) {
+        DATA.accounts.forEach(a => activeAccounts.add(a.name));
+      } else {
+        if (DATA.accounts.length > 0) {
+          activeAccounts.clear();
+          activeAccounts.add(DATA.accounts[0].name); // always keep at least one
+        }
+      }
+      buildToggles();
+      renderOverview();
+      saveToCache();
+    }
     let chartInstances = {};
 
     document.getElementById('fileUpload').addEventListener('change', handleFileUpload);
@@ -2300,13 +2817,20 @@
     // ═══════════════════════════════════════════════════════════════
     function buildToggles() {
       const el = document.getElementById('accToggles');
-      el.innerHTML = '<span style="font-size:12px;color:var(--muted);font-weight:600">Show accounts:</span>';
+      el.innerHTML = `
+        <span style="font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap">Show accounts:</span>
+        <div style="display:flex;gap:4px;margin-left:8px;margin-right:12px">
+          <button class="btn-link" onclick="selectAllAccounts(true)">All</button>
+          <button class="btn-link" onclick="selectAllAccounts(false)">None</button>
+        </div>
+      `;
       DATA.accounts.forEach((acc, i) => {
         const isActive = activeAccounts.has(acc.name);
         const btn = document.createElement('div');
         btn.className = `acc-toggle ${isActive ? 'on' : ''}`; btn.id = `toggle-${i}`;
-        btn.style.cssText = `border-color:${PALETTE[i]};color:${PALETTE[i]}`;
-        btn.innerHTML = `<span class="dot" style="background:${PALETTE[i]}"></span>${acc.name}`;
+        btn.style.cssText = `border-color:${PALETTE[i % PALETTE.length]};color:${PALETTE[i % PALETTE.length]}`;
+        btn.innerHTML = `<span class="dot" style="background:${PALETTE[i % PALETTE.length]}"></span><span class="acc-toggle-label">${acc.name}</span>`;
+        btn.title = acc.name;
         btn.onclick = () => {
           if (activeAccounts.has(acc.name) && activeAccounts.size === 1) return;
           if (activeAccounts.has(acc.name)) { activeAccounts.delete(acc.name); btn.classList.remove('on'); }
@@ -2322,16 +2846,18 @@
     //  OVERVIEW RENDERING
     // ═══════════════════════════════════════════════════════════════
     function renderOverview() {
-      destroyCharts(['chartPV', 'chartNAV', 'chartXIRR', 'chartReturns', 'chartCashflow', 'chartGains', 'chartConcentration']);
+      destroyCharts(['chartPV', 'chartNAV', 'chartXIRR', 'chartReturns', 'chartGains', 'chartConcentration']);
       const active = DATA.accounts.filter(a => activeAccounts.has(a.name));
       buildKPIs(active);
+      buildNavReturns(active);
       buildConcentration(active);
       buildCharts(active);
       buildCompare(active);
       buildCorrelationMatrix(active);
-      buildCombinedTrancheTable(active);
+      buildCombinedTrancheCards(active);
       buildBenchmarks(active);
-      buildCombinedTable(active);
+      _tableViewActive = active;
+      setTableView('annual'); // Set to Annual by default as requested
     }
 
     function destroyCharts(ids) {
@@ -2347,36 +2873,58 @@
     }
 
     function buildKPIs(active) {
-      const totInv = active.reduce((s, a) => s + (a.analytics.final_total_invested || 0), 0);
-      const totPV = active.reduce((s, a) => s + (a.analytics.final_total_pv || 0), 0);
-      const totGain = active.reduce((s, a) => s + (a.analytics.final_gain_total || 0), 0);
-      const ret = totInv ? totGain / totInv * 100 : 0;
+      if (!active || !active.length) {
+        document.getElementById('kpiGrid').innerHTML = '';
+        return;
+      }
 
+      let totInv = 0, totInvestedCost = 0, totFC = 0, totPV = 0, totGain = 0, totRealised = 0, totUnrealised = 0;
       let portXirr = 0, finalNav = 100, years = 0;
 
       if (active.length === 1) {
-        portXirr = active[0].analytics.xirr_pct;
-        finalNav = active[0].analytics.final_nav;
-        const start = new Date(active[0].analytics.start_date), end = new Date(active[0].analytics.end_date);
+        const a = active[0].analytics;
+        totInv = a.final_total_invested || 0;
+        totInvestedCost = a.final_invested_cost || 0;
+        totFC = a.final_free_cash || 0;
+        totPV = a.final_total_pv || 0;
+        totGain = a.final_gain_total || 0;
+        totRealised = a.final_gain_realised || 0;
+        totUnrealised = a.final_gain_unrealised || 0;
+
+        portXirr = a.xirr_pct || 0;
+        finalNav = a.final_nav || 100;
+        const start = new Date(a.start_date);
+        const end = new Date(a.end_date);
         years = (end - start) / (365.25 * 24 * 3600 * 1000);
       } else {
         const aggregated = calcCombinedRows(active);
         if (aggregated.length) {
           const last = aggregated[aggregated.length - 1];
+          totInv = last.total_invested || 0;
+          totInvestedCost = last.invested || 0;
+          totFC = last.free_cash || 0;
+          totPV = last.total_pv || 0;
+          totGain = last.gain_total || 0;
+          totRealised = last.gain_realised || 0;
+          totUnrealised = last.gain_unrealised || 0;
+
           portXirr = last.monthly_xirr_pct || 0;
           finalNav = last.nav || 100;
-          const start = new Date(aggregated[0].date), end = new Date(last.date);
+          const start = new Date(aggregated[0].date);
+          const end = new Date(last.date);
           years = (end - start) / (365.25 * 24 * 3600 * 1000);
         }
       }
+      const ret = totInv ? (totGain / totInv * 100) : 0;
       const cagr = years > 0 ? (Math.pow(finalNav / 100, 1 / years) - 1) * 100 : 0;
 
       document.getElementById('kpiGrid').innerHTML = [
-        kpiCard('total_invested', 'Net Cashflow (Total Invested)', fmt(totInv), 'overall invested', 'neutral'),
-        kpiCard('pv', 'Current Value (PV)', fmt(totPV), 'current portfolio value', 'neutral'),
-        kpiCard('gain_total', 'Total Gain', fmt(totGain), fmtp(ret) + ' total return', cls(totGain)),
-        kpiCard('xirr', 'Portfolio XIRR', fmtp(portXirr), 'annualised money-weighted', cls(portXirr)),
-        kpiCard('nav', 'Performance (NAV)', fmtNav(finalNav), 'Annualised CAGR: ' + fmtp(cagr), 'neutral'),
+        kpiCard('total_invested', 'Net Cashflow (Inv)', fmt(totInv), 'overall invested', 'neutral'),
+        kpiCard('invested', 'Invested Capital (Cost)', fmt(totInvestedCost), 'actual amount in market', 'neutral'),
+        kpiCard('pv', 'Portfolio Value (PV)', fmt(totPV), `Assets: ${fmt(totPV - totFC)} | Cash: ${fmt(totFC)}`, 'neutral'),
+        kpiCard('gain_total', 'Total Gain', fmt(totGain), `Realised: ${fmt(totRealised)} | Unrealised: ${fmt(totUnrealised)}`, cls(totGain)),
+        kpiCard('xirr', 'Portfolio XIRR', fmtp(portXirr), 'MWR annualised', cls(portXirr)),
+        kpiCard('nav', 'Performance (NAV)', fmtNav(finalNav), 'CAGR: ' + fmtp(cagr), 'neutral'),
       ].join('');
     }
 
@@ -2385,6 +2933,7 @@
       const allDates = [...new Set(activeAccountsList.flatMap(a => a.rows.map(r => r.date)))].sort();
       let c_units = null;
       let c_nav_prev = 100.0;
+      let c_pv_prev = null;
       const aggregated = [];
 
       allDates.forEach(d => {
@@ -2410,24 +2959,32 @@
           }
         });
 
-        // MF style combined NAV
+        const tot_total_pv = tot_pv + tot_fc;
+
+        // MF style combined NAV (uses total_pv = pv + free_cash for NAV calc like per-account)
         let c_nav = 100;
         if (c_units === null) {
-          c_units = tot_pv / 100; c_nav = 100;
+          c_units = tot_total_pv / 100; c_nav = 100;
         } else {
           if (c_nav_prev > 0) c_units += tot_cf / c_nav_prev;
-          c_nav = c_units > 0 ? tot_pv / c_units : 100;
+          c_nav = c_units > 0 ? tot_total_pv / c_units : 100;
         }
         c_nav_prev = c_nav;
+
+        const monthly_return_pct = c_pv_prev !== null && c_pv_prev > 0
+          ? (tot_total_pv - c_pv_prev) / c_pv_prev * 100 : 0;
+        c_pv_prev = tot_total_pv;
 
         const returns_pct = tot_invested ? tot_gain / tot_invested * 100 : 0;
 
         aggregated.push({
           date: d,
           cashflow: tot_cf, free_cash: tot_fc, invested: tot_inv, pv: tot_pv,
-          total_invested: tot_invested, total_pv: tot_pv,
+          total_invested: tot_invested, total_pv: tot_total_pv,
           gain_unrealised: tot_unreal, gain_realised: tot_real, gain_total: tot_gain,
-          returns_pct: returns_pct, nav: c_nav, monthly_xirr_pct: null
+          returns_pct: returns_pct, nav: c_nav,
+          monthly_return_pct: Math.round(monthly_return_pct * 10000) / 10000,
+          monthly_xirr_pct: null
         });
       });
       aggregated.forEach((r, idx) => {
@@ -2436,18 +2993,64 @@
       return aggregated;
     }
 
+    let _investedVisible = false;
+
+    function toggleInvestedLines() {
+      _investedVisible = !_investedVisible;
+      const btn = document.getElementById('btnShowInvested');
+      if (btn) btn.classList.toggle('active', _investedVisible);
+      const chart = chartInstances['chartPV'];
+      if (!chart) return;
+      chart.data.datasets.forEach(ds => {
+        if (ds._isInvestedLine) {
+          ds.hidden = !_investedVisible;
+        }
+      });
+      chart.update();
+    }
+
     function buildCharts(active) {
       const aggregated = (active.length === 1) ? active[0].rows : calcCombinedRows(active);
       const allDates = aggregated.map(r => r.date.slice(0, 7));
 
-      // 1. PV Over Time
+      // 1. PV Over Time (with optional invested overlay)
       const pvDatasets = active.map((acc) => {
         const m = {}; acc.rows.forEach(r => { m[r.date.slice(0, 7)] = r.total_pv; });
         const globalIdx = DATA.accounts.indexOf(acc);
         return { label: acc.name, data: allDates.map(d => m[d] ?? null), borderColor: PALETTE[globalIdx % PALETTE.length], backgroundColor: pa(globalIdx % PALETTE.length, .08), fill: false, tension: .4, pointRadius: 4, spanGaps: true };
       });
       if (active.length > 1) pvDatasets.push({ label: 'Combined', data: aggregated.map(r => r.total_pv), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
-      chartInstances['chartPV'] = new Chart(document.getElementById('chartPV'), { type: 'line', data: { labels: allDates, datasets: pvDatasets }, options: { responsive: true, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } } }, scales: { ...baseScales, y: { ...baseScales.y, ticks: { callback: v => fmt(v) } } } } });
+
+      // Invested overlay datasets (hidden by default, toggled by button)
+      active.forEach((acc) => {
+        const m = {}; acc.rows.forEach(r => { m[r.date.slice(0, 7)] = r.invested; });
+        const globalIdx = DATA.accounts.indexOf(acc);
+        const col = PALETTE[globalIdx % PALETTE.length];
+        pvDatasets.push({
+          label: acc.name + ' Invested',
+          data: allDates.map(d => m[d] ?? null),
+          borderColor: col, backgroundColor: 'transparent',
+          fill: false, tension: .4, borderDash: [3, 4], pointRadius: 2, spanGaps: true,
+          hidden: !_investedVisible, _isInvestedLine: true
+        });
+      });
+
+      // Reset toggle button state
+      const btnInv = document.getElementById('btnShowInvested');
+      if (btnInv) btnInv.classList.toggle('active', _investedVisible);
+
+      chartInstances['chartPV'] = new Chart(document.getElementById('chartPV'), {
+        type: 'line',
+        data: { labels: allDates, datasets: pvDatasets },
+        options: {
+          responsive: true, interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } }
+          },
+          scales: { ...baseScales, y: { ...baseScales.y, ticks: { callback: v => fmt(v) } } }
+        }
+      });
 
       // 2. NAV Progression
       const navDatasets = active.map((acc) => {
@@ -2457,33 +3060,16 @@
       });
       if (active.length > 1) navDatasets.push({ label: 'Combined', data: aggregated.map(r => r.nav), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
 
-      // Inject Global Benchmarks into NAV chart
-      // FIX: allDates keys are YYYY-MM, nav_progression keys are YYYY-MM-DD — normalise to YYYY-MM lookup
       if (DATA.benchmarks && DATA.benchmarks.length) {
         const BCOLORS = {
-          "Nifty 50": "rgba(255, 153, 0, 0.9)",
-          "Nasdaq": "rgba(0, 153, 255, 0.9)",
-          "Gold": "rgba(255, 215, 0, 0.9)",
-          "Fixed Deposit (7%)": "rgba(180, 180, 180, 0.7)",
-          "Midcap 150": "rgba(255, 100, 200, 0.9)"
+          "Nifty 50": "rgba(255, 153, 0, 0.9)", "Nasdaq": "rgba(0, 153, 255, 0.9)",
+          "Gold": "rgba(255, 215, 0, 0.9)", "Fixed Deposit (7%)": "rgba(180, 180, 180, 0.7)", "Midcap 150": "rgba(255, 100, 200, 0.9)"
         };
         DATA.benchmarks.forEach(b => {
           if (!b.nav_progression) return;
-          // Build a YYYY-MM → value map (keys may be YYYY-MM-DD or YYYY-MM)
           const bMap = {};
           Object.keys(b.nav_progression).forEach(k => { bMap[k.slice(0, 7)] = b.nav_progression[k]; });
-          const bData = allDates.map(d => bMap[d] ?? null);
-          navDatasets.push({
-            label: b.name,
-            data: bData,
-            borderColor: BCOLORS[b.name] || 'rgba(100,100,100,0.7)',
-            fill: false,
-            tension: 0.3,
-            borderDash: [4, 3],
-            borderWidth: 1.5,
-            pointRadius: 0,
-            spanGaps: true
-          });
+          navDatasets.push({ label: b.name, data: allDates.map(d => bMap[d] ?? null), borderColor: BCOLORS[b.name] || 'rgba(100,100,100,0.7)', fill: false, tension: 0.3, borderDash: [4, 3], borderWidth: 1.5, pointRadius: 0, spanGaps: true });
         });
       }
 
@@ -2498,15 +3084,14 @@
         }
       });
 
-      // 2.5 XIRR Progression — skip first 2 rows to avoid the mathematically-correct-but-useless 1600%+ startup spike
+      // 3. XIRR Progression (full width) — skip first 2 rows to avoid startup spikes
       const xirrDatasets = active.map((acc) => {
         const m = {}; acc.rows.forEach((r, idx) => { if (idx >= 2) m[r.date.slice(0, 7)] = r.monthly_xirr_pct; });
         const globalIdx = DATA.accounts.indexOf(acc);
         return { label: acc.name, data: allDates.map(d => m[d] ?? null), borderColor: PALETTE[globalIdx % PALETTE.length], backgroundColor: pa(globalIdx % PALETTE.length, .08), fill: false, tension: .4, pointRadius: 4, spanGaps: true };
       });
-      if (active.length > 1) xirrDatasets.push({ label: 'Combined', data: aggregated.map(r => r.monthly_xirr_pct), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
-      // Compute suggestedMax for XIRR chart (cap at 200% to avoid huge initial spikes)
-      const xirrVals = active.flatMap(acc => acc.rows.map(r => r.monthly_xirr_pct || 0)).filter(v => Math.abs(v) < 300);
+      if (active.length > 1) xirrDatasets.push({ label: 'Combined', data: aggregated.map((r, idx) => idx >= 2 ? r.monthly_xirr_pct : null), borderColor: '#fff', backgroundColor: 'rgba(255,255,255,.05)', fill: false, tension: .4, borderDash: [5, 4], pointRadius: 3, spanGaps: true });
+      const xirrVals = [...active.flatMap(acc => acc.rows.map(r => r.monthly_xirr_pct || 0)), ...aggregated.map(r => r.monthly_xirr_pct || 0)].filter(v => Math.abs(v) < 300);
       const xirrMax = Math.min(200, Math.max(...xirrVals, 20));
       const xirrMin = Math.max(-100, Math.min(...xirrVals, -20));
 
@@ -2514,115 +3099,163 @@
         type: 'line',
         data: { labels: allDates, datasets: xirrDatasets },
         options: {
-          responsive: true, interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtp(c.raw)}` } }
-          },
-          scales: {
-            ...baseScales,
-            y: { ...baseScales.y, suggestedMin: xirrMin, suggestedMax: xirrMax, ticks: { callback: v => v + '%' } }
-          }
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtp(c.raw)}` } } },
+          scales: { ...baseScales, y: { ...baseScales.y, suggestedMin: xirrMin, suggestedMax: xirrMax, ticks: { callback: v => v + '%' } } }
         }
       });
 
-      // 3. Monthly Returns % — uses monthly_return_pct (period-over-period, NOT cumulative)
-      const retDatasets = active.map((acc) => {
-        const m = {}; acc.rows.forEach(r => { m[r.date.slice(0, 7)] = r.monthly_return_pct; });
-        const globalIdx = DATA.accounts.indexOf(acc);
-        const color = PALETTE[globalIdx % PALETTE.length];
-        return {
-          label: acc.name, data: allDates.map(d => m[d] ?? null),
-          backgroundColor: allDates.map(d => { const v = m[d]; return v == null ? 'transparent' : v >= 0 ? pa(globalIdx % PALETTE.length, .75) : 'rgba(255,79,94,.65)'; }),
-          borderColor: allDates.map(d => { const v = m[d]; return v == null ? 'transparent' : v >= 0 ? color : '#ff4f5e'; }),
-          borderWidth: 1, borderRadius: 4
-        };
-      });
-      // Cap axis at ±40% — periodic monthly changes rarely exceed this outside extreme events
-      const retVals = active.flatMap(acc => acc.rows.map(r => r.monthly_return_pct || 0)).filter(v => Math.abs(v) < 90);
-      const retMax = Math.min(40, Math.max(...retVals, 5));
-      const retMin = Math.max(-40, Math.min(...retVals, -5));
+      // 4. Monthly Returns % — AGGREGATE data (combined portfolio)
+      const aggRetData = aggregated.map(r => r.monthly_return_pct ?? null);
+      const aggRetColors = aggRetData.map(v => v == null ? 'transparent' : v >= 0 ? 'rgba(33,208,122,0.75)' : 'rgba(255,79,94,0.65)');
+      const aggRetBorder = aggRetData.map(v => v == null ? 'transparent' : v >= 0 ? '#21d07a' : '#ff4f5e');
+      const retVals = aggRetData.filter(v => v != null && Math.abs(v) < 90);
+      const retMax = retVals.length ? Math.min(40, Math.max(...retVals, 5)) : 20;
+      const retMin = retVals.length ? Math.max(-40, Math.min(...retVals, -5)) : -20;
 
       chartInstances['chartReturns'] = new Chart(document.getElementById('chartReturns'), {
         type: 'bar',
-        data: { labels: allDates, datasets: retDatasets },
+        data: {
+          labels: allDates,
+          datasets: [{ label: 'Monthly Return % (Combined)', data: aggRetData, backgroundColor: aggRetColors, borderColor: aggRetBorder, borderWidth: 1, borderRadius: 4 }]
+        },
         options: {
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtp(c.raw)}` } }
-          },
-          scales: {
-            ...baseScales,
-            y: { ...baseScales.y, suggestedMin: retMin, suggestedMax: retMax, ticks: { callback: v => v + '%' } }
-          }
+          plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => ` Combined: ${fmtp(c.raw)}` } } },
+          scales: { ...baseScales, y: { ...baseScales.y, suggestedMin: retMin, suggestedMax: retMax, ticks: { callback: v => v + '%' } } }
         }
       });
 
-      // 4. Cashflow vs Portfolio Value — shows both net invested and current value on same chart
-      const cfDatasets = active.flatMap((acc) => {
-        let cum = 0; const mCF = {}, mPV = {};
-        acc.rows.forEach(r => { cum += r.cashflow || 0; mCF[r.date.slice(0, 7)] = cum; mPV[r.date.slice(0, 7)] = r.total_pv; });
-        const globalIdx = DATA.accounts.indexOf(acc);
-        const col = PALETTE[globalIdx % PALETTE.length];
-        const datasets = [
-          { label: acc.name + ' Invested', data: allDates.map(d => mCF[d] ?? null), borderColor: col, backgroundColor: pa(globalIdx % PALETTE.length, .12), fill: false, tension: .4, spanGaps: true, borderDash: [4, 3], pointRadius: 2 },
-          { label: acc.name + ' Current Value', data: allDates.map(d => mPV[d] ?? null), borderColor: col, backgroundColor: pa(globalIdx % PALETTE.length, .18), fill: true, tension: .4, spanGaps: true, pointRadius: 3 }
-        ];
-        if (active.length > 1) return datasets; // show both lines per account when multi-account
-        return datasets; // single account: same
-      });
-      chartInstances['chartCashflow'] = new Chart(document.getElementById('chartCashflow'), {
-        type: 'line',
-        data: { labels: allDates, datasets: cfDatasets },
-        options: {
-          responsive: true, interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
-            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } }
-          },
-          scales: { ...baseScales, y: { ...baseScales.y, ticks: { callback: v => fmt(v) } } }
-        }
-      });
-
-      // 5. Gain Composition — Stacked Bar (Unrealised + Realised)
-      const gainDatasets = active.flatMap((acc) => {
-        const globalIdx = DATA.accounts.indexOf(acc);
-        return [
-          {
-            label: acc.name + ' Unrealised',
-            data: allDates.map(d => { const r = acc.rows.find(x => x.date.slice(0, 7) === d); return r ? r.gain_unrealised : null; }),
-            backgroundColor: pa(globalIdx % PALETTE.length, .75),
-            borderColor: PALETTE[globalIdx % PALETTE.length],
-            borderWidth: 1, borderRadius: 3, stack: acc.name, spanGaps: true
-          },
-          {
-            label: acc.name + ' Realised',
-            data: allDates.map(d => { const r = acc.rows.find(x => x.date.slice(0, 7) === d); return r ? r.gain_realised : null; }),
-            backgroundColor: pa(globalIdx % PALETTE.length, .35),
-            borderColor: PALETTE[globalIdx % PALETTE.length],
-            borderWidth: 1, borderRadius: 3, stack: acc.name, spanGaps: true
-          },
-        ];
-      });
+      // 5. Gain Composition — AGGREGATE stacked bar
       chartInstances['chartGains'] = new Chart(document.getElementById('chartGains'), {
         type: 'bar',
-        data: { labels: allDates, datasets: gainDatasets },
+        data: {
+          labels: allDates,
+          datasets: [
+            { label: 'Combined Unrealised', data: aggregated.map(r => r.gain_unrealised), backgroundColor: 'rgba(108,99,255,0.75)', borderColor: '#6c63ff', borderWidth: 1, borderRadius: 3, stack: 'combined', spanGaps: true },
+            { label: 'Combined Realised', data: aggregated.map(r => r.gain_realised), backgroundColor: 'rgba(0,212,170,0.50)', borderColor: '#00d4aa', borderWidth: 1, borderRadius: 3, stack: 'combined', spanGaps: true }
+          ]
+        },
         options: {
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { position: 'top', labels: { boxWidth: 12 } },
-            tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } }
-          },
-          scales: {
-            ...baseScales,
-            x: { ...baseScales.x, stacked: true },
-            y: { ...baseScales.y, stacked: true, ticks: { callback: v => fmt(v) } }
-          }
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12 } }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } } },
+          scales: { ...baseScales, x: { ...baseScales.x, stacked: true }, y: { ...baseScales.y, stacked: true, ticks: { callback: v => fmt(v) } } }
         }
       });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  COLLAPSIBLE SECTIONS
+    // ═══════════════════════════════════════════════════════════════
+    function toggleSection(sectionId, headerEl) {
+      const content = document.getElementById(sectionId);
+      if (!content) return;
+      const isCollapsed = content.classList.toggle('collapsed');
+      if (headerEl) headerEl.classList.toggle('collapsed', isCollapsed);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  NAV PERIOD RETURNS
+    // ═══════════════════════════════════════════════════════════════
+    function buildNavReturns(active) {
+      const singleGrid = document.getElementById('navReturnsSingleGrid');
+      const multiGrid = document.getElementById('navReturnsGrid');
+      const singleSec = document.getElementById('navReturnsSection');
+      const multiSec = document.getElementById('concentrationSection');
+
+      if (!active.length) {
+        if (singleSec) singleSec.style.display = 'none';
+        if (multiSec) multiSec.style.display = 'none';
+        return;
+      }
+
+      const windows = [
+        { label: '1M', months: 1 }, { label: '3M', months: 3 }, { label: '6M', months: 6 },
+        { label: '1Y', months: 12 }, { label: '3Y', months: 36 }, { label: '5Y', months: 60 },
+        { label: 'Inception', months: null }
+      ];
+
+      function getReturnPill(rows, w) {
+        if (!rows || !rows.length) return `<span class="ret-na">N/A</span>`;
+        const last = rows[rows.length - 1];
+        const navNow = last.nav || 100;
+        let navThen = null, durationText = '';
+        if (w.months === null) {
+          navThen = 100;
+          const dNow = new Date(last.date);
+          const dStart = new Date(rows[0].date);
+          const diffMs = dNow - dStart;
+          const totalMonths = Math.max(1, Math.round(diffMs / (30.4375 * 24 * 3600 * 1000)));
+          const years = Math.floor(totalMonths / 12);
+          const months = totalMonths % 12;
+          durationText = ` (${years ? years + 'y ' : ''}${months}m)`;
+        } else {
+          const dNow = new Date(last.date);
+          const dThenTarget = new Date(dNow.getFullYear(), dNow.getMonth() - w.months, dNow.getDate());
+          for (let i = rows.length - 1; i >= 0; i--) {
+            if (new Date(rows[i].date) <= dThenTarget) { navThen = rows[i].nav; break; }
+          }
+        }
+        if (navThen === null || navThen <= 0) return `<span class="ret-na">N/A</span>`;
+        const ret = (navNow / navThen - 1) * 100;
+        return `<span class="${ret >= 0 ? 'positive' : 'negative'}">${(ret >= 0 ? '+' : '') + ret.toFixed(1)}%${durationText}</span>`;
+      }
+
+      // 1. If multi-account: Show table in "Allocation & Performance"
+      if (active.length >= 2) {
+        if (singleSec) singleSec.style.display = 'none';
+        if (multiSec) multiSec.style.display = '';
+
+        const combinedRows = calcCombinedRows(active);
+        const rowsHtml = active.map((acc, i) => {
+          const cells = windows.map(w => `<td>${getReturnPill(acc.rows, w)}</td>`).join('');
+          return `<tr>
+            <td><span class="dot" style="background:${PALETTE[i % PALETTE.length]}"></span>${acc.name}</td>
+            ${cells}
+          </tr>`;
+        }).join('');
+
+        const combinedCells = windows.map(w => `<td>${getReturnPill(combinedRows, w)}</td>`).join('');
+        const tableHtml = `
+          <table class="nav-compare-table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                ${windows.map(w => `<th>${w.label}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+              <tr class="combined-row">
+                <td>Portfolio (Combined)</td>
+                ${combinedCells}
+              </tr>
+            </tbody>
+          </table>
+        `;
+        if (multiGrid) multiGrid.innerHTML = tableHtml;
+      }
+      else {
+        // 2. If single-account: Show pills in "Performance & Returns"
+        if (multiSec) multiSec.style.display = 'none';
+        if (singleSec) singleSec.style.display = '';
+
+        const acc = active[0];
+        const pills = windows.map(w => {
+          const val = getReturnPill(acc.rows, w);
+          const isNa = val.includes('ret-na');
+          const isPos = val.includes('positive');
+          const cls = isNa ? 'neutral' : (isPos ? 'positive' : 'negative');
+          return `<div class="nav-ret-pill ${cls}">
+            <div class="nav-ret-label">${w.label}</div>
+            <div class="nav-ret-val">${val}</div>
+          </div>`;
+        }).join('');
+        if (singleGrid) singleGrid.innerHTML = `<div class="nav-returns-grid">${pills}</div>`;
+      }
     }
 
     function buildCompare(active) {
@@ -2631,10 +3264,11 @@
         const a = acc.analytics, idx = DATA.accounts.findIndex(x => x.name === acc.name);
         const pct = maxPV ? (a.final_total_pv / maxPV * 100).toFixed(1) : 0;
         return `<div class="compare-card">
-      <div class="compare-name"><span class="dot" style="background:${PALETTE[idx]}"></span>${acc.name}</div>
-      <div class="stat-row"><span class="stat-label">${tip('total_invested', 'Total Invested')}</span><span class="stat-val">${fmt(a.final_total_invested)}</span></div>
-      <div class="stat-row"><span class="stat-label">${tip('pv', 'Current Value')}</span><span class="stat-val">${fmt(a.final_total_pv)}</span></div>
-      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${PALETTE[idx]}"></div></div>
+      <div class="compare-name"><span class="dot" style="background:${PALETTE[idx % PALETTE.length]}"></span>${acc.name}</div>
+      <div class="stat-row"><span class="stat-label">${tip('total_invested', 'Net Cashflow (Invested)')}</span><span class="stat-val">${fmt(a.final_total_invested)}</span></div>
+      <div class="stat-row"><span class="stat-label">${tip('invested', 'Current Invested Value')}</span><span class="stat-val">${fmt(a.final_pv)}</span></div>
+      <div class="stat-row"><span class="stat-label">${tip('pv', 'Current Value (Total PV)')}</span><span class="stat-val">${fmt(a.final_total_pv)}</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${PALETTE[idx % PALETTE.length]}"></div></div>
       <div style="height:10px"></div>
       <div class="stat-row"><span class="stat-label">${tip('gain_total', 'Total Gain')}</span><span class="stat-val ${cls(a.final_gain_total)}">${fmt(a.final_gain_total)}</span></div>
       <div class="stat-row"><span class="stat-label">${tip('returns_pct', 'Returns %')}</span><span class="stat-val ${cls(a.final_returns_pct)}">${fmtp(a.final_returns_pct)}</span></div>
@@ -2650,6 +3284,80 @@
       <div class="stat-row"><span class="stat-label" title="(XIRR - 7% risk-free) ÷ NAV Volatility. &gt;2=Excellent, &gt;1=Good, &gt;0=OK, &lt;0=Underperforming vs risk. Compare across your accounts." style="cursor:help;border-bottom:1px dotted var(--muted)">Sharpe Ratio</span><span class="stat-val">${sharpeBadge(a.sharpe_ratio)}</span></div>
     </div>`;
       }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  TRANCHE HEATMAP (replaces card grid)
+    // ═══════════════════════════════════════════════════════════════
+    function buildCombinedTrancheCards(active) {
+      const container = document.getElementById('trancheCardsOverview');
+      if (!container) return;
+
+      const aggregated = calcCombinedRows(active);
+      if (!aggregated.length) { container.innerHTML = ''; return; }
+
+      const lastRow = aggregated[aggregated.length - 1];
+      const navNow = lastRow.nav || 100;
+      const dateNow = lastRow.date;
+
+      const cashflowRows = aggregated.filter(r => (r.cashflow || 0) !== 0);
+      if (!cashflowRows.length) {
+        container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:13px;">No cashflows found.</div>';
+        return;
+      }
+
+      // Max IRR for heatmap intensity scaling
+      const maxIrr = Math.max(1, ...cashflowRows.map(r => {
+        const nav = r.nav || 100;
+        const yearsDiff = (new Date(dateNow) - new Date(r.date)) / (365.25 * 24 * 3600 * 1000);
+        if (yearsDiff <= 0) return 0;
+        return Math.min(200, Math.abs((Math.pow(navNow / nav, 1 / yearsDiff) - 1) * 100));
+      }));
+
+      const cells = cashflowRows.map(r => {
+        const nav = r.nav || 100;
+        const cf = r.cashflow || 0;
+        const dStr = r.date.slice(0, 7);
+        const yearsDiff = (new Date(dateNow) - new Date(r.date)) / (365.25 * 24 * 3600 * 1000);
+
+        if (cf > 0) {
+          const irr = yearsDiff > 0 && nav > 0 ? (Math.pow(navNow / nav, 1 / yearsDiff) - 1) * 100 : 0;
+          const navGrowth = nav > 0 ? (navNow / nav - 1) * 100 : 0;
+          const alpha = Math.min(0.9, 0.15 + (Math.abs(irr) / maxIrr) * 0.75);
+          const bg = irr >= 0 ? `rgba(33,208,122,${alpha})` : `rgba(255,79,94,${alpha})`;
+          const border = irr >= 0 ? `rgba(33,208,122,0.3)` : `rgba(255,79,94,0.3)`;
+
+          const tipHtml = `Invested: ${fmt(cf)}<br/>NAV: ${fmtNav(nav)} → ${fmtNav(navNow)}<br/>Growth: ${navGrowth.toFixed(1)}%<br/>Holding: ${Math.round(yearsDiff * 12)}m`;
+
+          return `<div class="tranche-cell" style="background:${bg}; border-color:${border};" data-tip="${tipHtml}">
+            <div class="tranche-cell-date">${dStr.split('-')[1]} '${dStr.split('-')[0].slice(2)}</div>
+            <div class="tranche-cell-irr">${(irr >= 0 ? '+' : '') + Math.round(irr)}%</div>
+            <div class="tranche-cell-amt">${fmt(cf)}</div>
+            <div class="tranche-cell-type">INVEST</div>
+          </div>`;
+        } else {
+          return `<div class="tranche-cell redeem-cell" data-tip="Withdrawal: ${fmt(Math.abs(cf))}<br/>NAV at exit: ${fmtNav(nav)}">
+            <div class="tranche-cell-date">${dStr.split('-')[1]} '${dStr.split('-')[0].slice(2)}</div>
+            <div class="tranche-cell-irr">EXIT</div>
+            <div class="tranche-cell-amt">${fmt(Math.abs(cf))}</div>
+            <div class="tranche-cell-type">REDEEM</div>
+          </div>`;
+        }
+      }).join('');
+
+      const totalInvested = active.reduce((s, a) => s + (a.analytics.final_total_invested || 0), 0);
+      const totalPV = active.reduce((s, a) => s + (a.analytics.final_total_pv || 0), 0);
+      const totalGain = active.reduce((s, a) => s + (a.analytics.final_gain_total || 0), 0);
+
+      container.innerHTML = `
+        <div class="tranche-heatmap">${cells}</div>
+        <div class="tranche-footer">
+          <span>📊 Summary</span>
+          <span>Net Deployed: <strong>${fmt(totalInvested)}</strong></span>
+          <span>Actual Value: <strong class="${cls(totalGain)}">${fmt(totalPV)}</strong></span>
+          <span>Simple Return: <strong class="${cls(totalGain)}">${fmt(totalGain)} (${fmtp(totalPV / totalInvested * 100 - 100)})</strong></span>
+          <span style="font-size:10px;color:var(--muted)">ⓘ Color intensity = Timing IRR. Hover for details.</span>
+        </div>`;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -3026,128 +3734,91 @@
     // ═══════════════════════════════════════════════════════════════
     //  COMBINED TRANCHE IRR (Overview)
     // ═══════════════════════════════════════════════════════════════
-    function buildCombinedTrancheTable(active) {
-      const tbl = document.getElementById('tblTrancheOverview');
-      if (!tbl) return;
-
-      const aggregated = calcCombinedRows(active);
-      if (!aggregated.length) { tbl.innerHTML = ''; return; }
-
-      const lastRow = aggregated[aggregated.length - 1];
-      const navNow = lastRow.nav || 100;
-      const dateNow = lastRow.date;
-
-      // Build account contributions map for context labels (all cashflows)
-      const accContribByDate = {};
-      active.forEach(acc => {
-        acc.rows.forEach(r => {
-          const cf = r.cashflow || 0;
-          if (cf !== 0) {
-            const d = r.date.slice(0, 7);
-            if (!accContribByDate[d]) accContribByDate[d] = [];
-            accContribByDate[d].push({ name: acc.name, amount: cf });
-          }
-        });
-      });
-
-      const cashflowRows = aggregated.filter(r => (r.cashflow || 0) !== 0);
-      if (!cashflowRows.length) {
-        tbl.innerHTML = '<tr><td colspan="7" style="color:var(--muted);padding:16px;text-align:center;">No cashflows found.</td></tr>';
-        return;
-      }
-
-      // Same honest logic: Timing IRR = NAV growth rate from buy date
-      // No FIFO, no per-tranche ₹ gain (no trade data available)
-      const hdr = `<thead><tr>
-        <th>Month</th><th>Type</th><th>Amount</th><th>Accounts</th>
-        <th>NAV at Event</th><th>Holding</th>
-        <th title="How much the combined portfolio NAV grew since this date, annualised. Timing quality score across all accounts — NOT a P&amp;L.">Timing IRR &#9432;</th>
-      </tr></thead>`;
-
-      const fmt_nav = v => (v || 0).toFixed(2);
-      const rows = cashflowRows.map(r => {
-        const nav = r.nav || 100;
-        const cf = r.cashflow || 0;
-        const yearsDiff = (new Date(dateNow) - new Date(r.date)) / (365.25 * 24 * 3600 * 1000);
-        const months = Math.round(yearsDiff * 12);
-        const monthKey = r.date.slice(0, 7);
-        const contribs = accContribByDate[monthKey] || [];
-        const accNames = contribs.map(c => `${c.name} (${fmt(c.amount)})`).join(', ') || '—';
-
-        if (cf > 0) {
-          const irrAnnual = yearsDiff > 0 && nav > 0 ? (Math.pow(navNow / nav, 1 / yearsDiff) - 1) * 100 : 0;
-          const irrCls = irrAnnual >= 0 ? 'positive' : 'negative';
-          const navGrowth = nav > 0 ? ((navNow / nav - 1) * 100).toFixed(1) : '—';
-          return `<tr>
-            <td>${monthKey}</td>
-            <td><span style="color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.5px">INVEST</span></td>
-            <td>${fmt(cf)}</td>
-            <td style="font-size:11px;color:var(--muted)">${accNames}</td>
-            <td>${fmt_nav(nav)}</td>
-            <td>${months}m</td>
-            <td class="${irrCls}" title="Combined NAV grew ${navGrowth}% total since this deployment">
-              <strong>${fmtp(irrAnnual)}</strong>
-              <span style="font-size:9px;color:var(--muted);margin-left:4px">(${navGrowth}% total)</span>
-            </td>
-          </tr>`;
-        } else {
-          return `<tr style="opacity:0.65;background:rgba(255,180,0,.04)">
-            <td>${monthKey}</td>
-            <td><span style="color:#ffa94d;font-size:10px;font-weight:600;letter-spacing:.5px">REDEEM</span></td>
-            <td class="negative">${fmt(cf)}</td>
-            <td style="font-size:11px;color:var(--muted)">${accNames}</td>
-            <td>${fmt_nav(nav)}</td>
-            <td>${months}m</td>
-            <td style="color:var(--muted);font-size:11px">Combined NAV was ${fmt_nav(nav)} at exit</td>
-          </tr>`;
-        }
-      }).join('');
-
-      // Combined portfolio actual totals — computed from all active accounts
-      const totalInvested = active.reduce((s, a) => s + (a.analytics.final_total_invested || 0), 0);
-      const totalPV = active.reduce((s, a) => s + (a.analytics.final_total_pv || 0), 0);
-      const totalGain = active.reduce((s, a) => s + (a.analytics.final_gain_total || 0), 0);
-      const footerRow = `<tr style="background:rgba(108,99,255,.08);font-weight:700;font-size:12px;">
-        <td colspan="2">PORTFOLIO ACTUAL</td>
-        <td>${fmt(totalInvested)}</td>
-        <td style="color:var(--muted);font-size:10px;font-weight:400">Current PV: ${fmt(totalPV)}</td>
-        <td colspan="3">
-          <span class="${totalGain >= 0 ? 'positive' : 'negative'}">${fmt(totalGain)}</span>
-          <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:6px">total gain (all accounts)</span>
-        </td>
-      </tr>
-      <tr><td colspan="7" style="font-size:10px;color:var(--muted);padding:6px 10px;font-style:italic;">
-        ⓘ Timing IRR = combined portfolio NAV growth rate since each deployment date. Without trade-level data, per-tranche ₹ gain cannot be computed. Use this to assess which months you deployed capital at favourable portfolio valuations.
-      </td></tr>`;
-
-      tbl.innerHTML = hdr + '<tbody>' + rows + footerRow + '</tbody>';
-    }
 
 
     function buildBenchmarks(active) {
-      if (!DATA.benchmarks || !DATA.benchmarks.length) return;
-      const aggregated = calcCombinedRows(active);
+      const container = document.getElementById('benchmarkList');
+      if (!container) return;
+      if (!DATA.benchmarks || !DATA.benchmarks.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No benchmarks available.</div>'; return; }
+
+      const aggregated = (active.length === 1) ? active[0].rows : calcCombinedRows(active);
       if (!aggregated.length) return;
 
-      const last = aggregated[aggregated.length - 1];
-      const combXIRR = last.monthly_xirr_pct || 0;
-      const combNAV = last.nav || 100;
+      const windows = [
+        { label: '1M', months: 1 }, { label: '3M', months: 3 }, { label: '6M', months: 6 },
+        { label: '1Y', months: 12 }, { label: '3Y', months: 36 }, { label: '5Y', months: 60 },
+        { label: 'Inception', months: null }
+      ];
 
-      const bmarks = DATA.benchmarks.map(b => ({ ...b }));
-      bmarks.unshift({ name: 'Your Portfolio (Combined)', cagr_pct: combXIRR, final_nav: combNAV });
+      function getBMarkReturn(b, w) {
+        if (!b.nav_progression) return `<span class="ret-na">N/A</span>`;
+        const dates = Object.keys(b.nav_progression).sort();
+        if (!dates.length) return `<span class="ret-na">N/A</span>`;
+        const lastDate = dates[dates.length - 1];
+        const valNow = b.nav_progression[lastDate];
 
-      const cols = [{ k: 'name', label: 'Benchmark Index' }, { k: 'cagr_pct', label: 'Equivalent Returns (CAGR / XIRR)' }, { k: 'final_nav', label: 'Final Value (Base 100 NAV)' }];
-      const hdr = cols.map(c => `<th>${c.label}</th>`).join('');
-      const body = bmarks.map((b, i) => {
-        const isPort = i === 0;
-        const rowStyle = isPort ? 'background:rgba(108,99,255,0.15); font-weight:700;' : '';
-        return `<tr style="${rowStyle}">
-           <td>${isPort ? '<span style="color:var(--accent)">' + b.name + '</span>' : b.name}</td>
-           <td class="${b.cagr_pct >= 0 ? 'ret-pos' : 'ret-neg'}">${fmtp(b.cagr_pct)}</td>
-           <td class="${b.final_nav >= 100 ? 'ret-pos' : 'ret-neg'}">${fmtNav(b.final_nav)}</td>
-         </tr>`;
+        let valThen = null;
+        if (w.months === null) {
+          valThen = b.nav_progression[dates[0]];
+        } else {
+          const dNow = new Date(lastDate);
+          const dThenTarget = new Date(dNow.getFullYear(), dNow.getMonth() - w.months, dNow.getDate());
+          for (let i = dates.length - 1; i >= 0; i--) {
+            if (new Date(dates[i]) <= dThenTarget) { valThen = b.nav_progression[dates[i]]; break; }
+          }
+        }
+        if (valThen === null || valThen <= 0) return `<span class="ret-na">N/A</span>`;
+        const ret = (valNow / valThen - 1) * 100;
+        return `<span class="${ret >= 0 ? 'positive' : 'negative'}">${(ret >= 0 ? '+' : '') + ret.toFixed(1)}%</span>`;
+      }
+
+      function getPortfolioReturn(rows, w) {
+        if (!rows || !rows.length) return `<span class="ret-na">N/A</span>`;
+        const last = rows[rows.length - 1];
+        const navNow = last.nav || 100;
+        let navThen = null;
+        if (w.months === null) { navThen = 100; }
+        else {
+          const dNow = new Date(last.date);
+          const dThenTarget = new Date(dNow.getFullYear(), dNow.getMonth() - w.months, dNow.getDate());
+          for (let i = rows.length - 1; i >= 0; i--) {
+            if (new Date(rows[i].date) <= dThenTarget) { navThen = rows[i].nav; break; }
+          }
+        }
+        if (navThen === null || navThen <= 0) return `<span class="ret-na">N/A</span>`;
+        const ret = (navNow / navThen - 1) * 100;
+        return `<span class="${ret >= 0 ? 'positive' : 'negative'}">${(ret >= 0 ? '+' : '') + ret.toFixed(1)}%</span>`;
+      }
+
+      const rowsHtml = DATA.benchmarks.map(b => {
+        const cells = windows.map(w => `<td>${getBMarkReturn(b, w)}</td>`).join('');
+        return `<tr><td style="text-align:left;font-weight:600">${b.name}</td>${cells}</tr>`;
       }).join('');
-      document.getElementById('tblBenchmarks').innerHTML = `<thead><tr>${hdr}</tr></thead><tbody>${body}</tbody>`;
+
+      const portCells = windows.map(w => `<td>${getPortfolioReturn(aggregated, w)}</td>`).join('');
+
+      container.innerHTML = `
+        <div class="table-scroll" style="margin-top:10px">
+          <table class="bmark-table">
+            <thead>
+              <tr>
+                <th>Index / Asset</th>
+                ${windows.map(w => `<th>${w.label}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="your-portfolio">
+                <td style="text-align:left">🚀 Your Portfolio (NAV)</td>
+                ${portCells}
+              </tr>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:10px; color:var(--muted); margin-top:10px; padding:0 10px;">
+          ⓘ Comparison based on end-of-month adjusted close. Inception return is relative to the start date of your earliest account data.
+        </div>
+      `;
     }
 
 
@@ -3163,11 +3834,12 @@
         const cagr = years > 0 ? (Math.pow(a.final_nav / 100, 1 / years) - 1) * 100 : 0;
 
         document.getElementById(`kpiAcc${i}`).innerHTML = [
-          kpiCard('total_invested', 'Net Cashflow (Total Invested)', fmt(a.final_total_invested), a.num_months + ' months', 'neutral'),
-          kpiCard('pv', 'Current Value (PV)', fmt(a.final_total_pv), acc.name, 'neutral'),
-          kpiCard('gain_total', 'Total Gain', fmt(a.final_gain_total), fmtp(a.final_returns_pct) + ' returns', cls(a.final_gain_total)),
-          kpiCard('xirr', 'XIRR', fmtp(a.xirr_pct), 'annualised', cls(a.xirr_pct)),
-          kpiCard('nav', 'Performance (NAV)', fmtNav(a.final_nav), 'Annualised CAGR: ' + fmtp(cagr), 'neutral'),
+          kpiCard('total_invested', 'Net Cashflow (Inv)', fmt(a.final_total_invested), a.num_months + ' months', 'neutral'),
+          kpiCard('invested', 'Invested Capital (Cost)', fmt(a.final_invested_cost), 'actual amount in market', 'neutral'),
+          kpiCard('pv', 'Portfolio Value (PV)', fmt(a.final_total_pv), `Assets: ${fmt(a.final_total_pv - a.final_free_cash)} | Cash: ${fmt(a.final_free_cash)}`, 'neutral'),
+          kpiCard('gain_total', 'Total Gain', fmt(a.final_gain_total), `Realised: ${fmt(a.final_gain_realised)} | Unrealised: ${fmt(a.final_gain_unrealised)}`, cls(a.final_gain_total)),
+          kpiCard('xirr', 'XIRR', fmtp(a.xirr_pct), 'MWR annualised', cls(a.xirr_pct)),
+          kpiCard('nav', 'Performance (NAV)', fmtNav(a.final_nav), 'CAGR: ' + fmtp(cagr), 'neutral'),
         ].join('');
 
         // Point 5: compare annualised CAGR (NAV) vs XIRR
